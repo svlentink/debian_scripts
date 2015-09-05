@@ -20,7 +20,7 @@ function INSTALLflash { #almost depricated, who uses flash these days? (2015)
 	update-pepperflashplugin-nonfree --install
 }
 
-function disableUbuntuErrorMessges { #tested on lubuntu 15.04
+function disableUbuntuErrorMessages { #tested on lubuntu 15.04
 	echo 'enabled=0'| sudo tee /etc/default/apport
 }
 
@@ -41,3 +41,17 @@ function INSTALLgoogleChromePPA { # tested on lubuntu 15.04
 function INSTALLgoogleChrome { # tested on lubuntu 15.04
 	sudo apt-get install google-chrome-stable -y
 }
+
+#personal preferences
+	updateAlias
+	disableUbuntuErrorMessages
+#PPAs
+	INSTALLgoogleChromePPA
+#adding PPAs
+	sudo apt-get update
+#installing
+	INSTALLpreload
+	INSTALLcolorInvert
+	INSTALLgoogleChrome
+	INSTALLflash
+	INSTALLINSTALLubuntuCodecs
