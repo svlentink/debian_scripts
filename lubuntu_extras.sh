@@ -29,7 +29,7 @@ function runChromeOnBoot { # tested on lubuntu 15.04
 	sudo ln -s /usr/share/applications/google-chrome.desktop ~/.config/autostart
 }
 
-function INSTALLsystemMonitors{ # tested on lubuntu 15.04
+function INSTALLsystemMonitors { # tested on lubuntu 15.04
 	sudo apt-get install htop
 	sudo apt-get install gnome-system-monitor -y
 }
