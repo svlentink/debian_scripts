@@ -57,4 +57,15 @@ function INSTALLbasics { # tested on lubuntu 15.04
 	INSTALLremoveJunk
 }
 
+function chromify { #turn pc to chromebook
+	INSTALLremoveJunk
+	runChromeOnBoot
+	#TODO
+	#remove garbage icon desktop
+	#open doc, docx, xls, xlsx, pdf etc. in chrome
+	#the following extension is needed to prevent chrome from downloading it, and instead opening it:
+	#https://chrome.google.com/webstore/detail/office-editing-for-docs-s/gbkeegbaiigmenfmjfclcdgdpimamgkj
+}
+
+
 $@
