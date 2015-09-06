@@ -1,5 +1,10 @@
 # debian_scripts
 
+##Chrobuntu
+Turn a freshly installed Lubuntu laptop into a chromebook by pasting the following in a terminal:
+wget --no-cache -O /tmp/chromebk.sh https://raw.githubusercontent.com/svlentink/debian_scripts/master/chrobuntu.sh && sudo chmod +x /tmp/chromebk.sh && /tmp/chromebk.sh
+
+
 ## geoloc
 This script enables the logging of the location of the machine.
 I use this on my laptop, to keep track of where it was.
