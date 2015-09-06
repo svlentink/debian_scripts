@@ -16,8 +16,9 @@ function depricatedChangeSwappiness { # http://bernaerts.dyndns.org/linux/74-ubu
 }
 
 function INSTALLflash { #almost depricated, who uses flash these days? (2015)
-	apt-get install flashplugin-installer pepperflashplugin-nonfree
-	update-pepperflashplugin-nonfree --install
+	sudo apt-get install flashplugin-installer
+	sudo apt-get install pepperflashplugin-nonfree -y
+	sudo update-pepperflashplugin-nonfree --install
 }
 
 function disableUbuntuErrorMessages { #tested on lubuntu 15.04
