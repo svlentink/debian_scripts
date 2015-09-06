@@ -26,7 +26,7 @@ function INSTALLoffice { # tested on lubuntu 15.04
 
 function runChromeOnBoot { # tested on lubuntu 15.04
 	# http://dottech.org/118513/how-to-autostart-autorun-a-program-on-boot-in-ubuntu-guide/
-	sudo ln -s /usr/share/applications/google-chrome.desktop ~/.config/autostart
+	sudo ln -s /usr/share/applications/google-chrome.desktop ~/.config/autostart/google-chrome.desktop
 }
 
 function INSTALLsystemMonitors { # tested on lubuntu 15.04
