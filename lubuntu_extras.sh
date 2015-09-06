@@ -13,14 +13,10 @@ function invertColorsLXterminal { #tested on lubuntu 15.04
 	sed -i 's/fgcolor=#aaaaaaaaaaaa/fgcolor=#333333333333/g' ~/.config/lxterminal/*.conf
 }
 
-function INSTALLbasics { # tested on lubuntu 15.04
-	sudo apt-get install shotwell -y
-	sudo apt-get install htop
-	sudo apt-get install vlc -y
-	sudo apt-get install vim
-	sudo apt-get install gnome-system-monitor -y
-	sudo apt-get remove pidgin -y			# instant message
+function INSTALLremoveJunk {
+	sudo apt-get remove pidgin -y		# instant message
 	sudo apt-get remove sylpheed -y		# mail client
+	sudo apt-get remove firefox -y
 }
 
 function INSTALLoffice { # tested on lubuntu 15.04
@@ -33,6 +29,10 @@ function runChromeOnBoot { # tested on lubuntu 15.04
 	sudo ln -s /usr/share/applications/google-chrome.desktop ~/.config/autostart
 }
 
+function INSTALLsystemMonitors{ # tested on lubuntu 15.04
+	sudo apt-get install htop
+	sudo apt-get install gnome-system-monitor -y
+}
 function addMonitorsToTaskbar { # tested on lubuntu 15.04
 	local dest=~/.config/lxpanel/Lubuntu/panels/panel
 
@@ -47,6 +47,14 @@ function addMonitorsToTaskbar { # tested on lubuntu 15.04
 	echo "RAMColor=#FFFF00" >> $dest
 	echo "}" >> $dest
 	echo "}" >> $dest
+}
+
+function INSTALLbasics { # tested on lubuntu 15.04
+	sudo apt-get install shotwell -y
+	sudo apt-get install vlc -y
+	sudo apt-get install vim
+	INSTALLsystemMonitors
+	INSTALLremoveJunk
 }
 
 $@
