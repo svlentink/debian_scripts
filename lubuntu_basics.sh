@@ -11,17 +11,17 @@ function colorInvertKeybindLubuntu { # tested on lubuntu 15.04
 	openbox --reconfigure
 }
 
-function setSleepButton {#
+function setSleepButton {
 	sed -i 's/<\/channel>/<property name="sleep-button-action" type="uint" value="1"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 	sed -i 's/<\/channel>/<property name="hibernate-button-action" type="uint" value="1"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 }
 
-function suspendOnLowPower {#
+function suspendOnLowPower {
 	sed -i 's/<\/channel>/<property name="critical-power-action" type="uint" value="1"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 	sed -i 's/<\/channel>/<property name="critical-power-level" type="uint" value="5"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 }
 
-function sleepWhenLidCloses { #
+function sleepWhenLidCloses {
 	sed -i 's/<\/channel>/<property name="lid-action-on-battery" type="uint" value="1"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 	sed -i 's/<\/channel>/<property name="logind-handle-lid-switch" type="bool" value="true"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
 	sed -i 's/<\/channel>/<property name="lid-action-on-ac" type="uint" value="1"\/>\n<\/channel>/g' ~/.config/xfce4/xfconf/xfce-perchannel-xml/*.xml
