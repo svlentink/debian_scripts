@@ -55,4 +55,4 @@ function INSTALLgoogleChrome { # tested on lubuntu 15.04
 	INSTALLcolorInvert
 	INSTALLgoogleChrome
 	INSTALLflash
-	INSTALLINSTALLubuntuCodecs
+	INSTALLubuntuCodecs
