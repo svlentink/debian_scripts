@@ -99,3 +99,37 @@ function INSTALLwidevineAndSilverlight {
 		* ) echo 'okay, skipping it';;
 	esac
 }
+
+
+# the following needs an introduction
+# When I was at work, I got a phone call;
+# the gf of my housemate was on the phone with an indian
+# who claimed to be cyber security and was forced to install teamviewer.
+# Ofcourse this person thought that if there was a cyber crime,
+# it needed to be on my laptop.
+#
+# This made me re-evaluate my security.
+# Just like you hide cleaning materials from children,
+# I now know that I need to threat people around me
+# with a white list approach, not a black list!
+# You never know who your housemate has for a sleep over ;)
+function bootInTty { # tested on lubuntu 15.10
+	# http://unix.stackexchange.com/questions/115482/how-to-change-the-default-tty-after-boot
+	local tty=$1
+	if [ -n "$tty" ]; then
+		local tty=1
+	fi
+	if [ -z "$(grep chvt /etc/rc.local)" ]; then
+		echo allready booting in tty, returning from bootInTty
+		return
+	fi
+	echo Setting default booting in tty$tty
+	sudo sed -i 's/exit/chvt\ '$tty'\nexit/g' /etc/rc.local
+}
+function setTtyMsg { # tested on lubuntu 15.10
+	local msg=$1
+	if [ -n "$msg" ]; then
+		local msg="Don't even try, I will look for you, I will find you, and I will kill you!"
+	fi
+	echo $msg" \l" | sudo tee /etc/issue
+}
