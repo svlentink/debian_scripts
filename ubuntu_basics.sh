@@ -26,7 +26,7 @@ function disableUbuntuErrorMessages { #tested on lubuntu 15.04
 }
 
 function updateAlias { # tested on lubuntu 15.04
-	sudo echo "alias update='sudo apt update && sudo apt full-upgrade && if [ -n \"\$(which npm)\" ]; then sudo npm install -g npm; fi && sudo apt-get autoremove -y && do-release-upgrade'" >> ~/.bashrc
+	sudo echo "alias update='sudo apt update && sudo apt full-upgrade -y && if [ -n \"\$(which npm)\" ]; then sudo npm install -g npm; fi && sudo apt-get autoremove -y && do-release-upgrade'" >> ~/.bashrc
 }
 
 function INSTALLpreload { # tested on lubuntu 15.04
