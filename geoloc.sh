@@ -22,7 +22,7 @@ echo -e '\nfunction getLocation {' | sudo tee --append $SCRIPTLOC
 	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
 
 	echo -e '\n\t/usr/bin/wget --no-cache -O $DIR/.currentLocation https://freegeoip.net/json/' | sudo tee --append $SCRIPTLOC
-	echo -e '\t/bin/echo $(/bin/date -R) > $DIR/.lastUpdateTime' | sudo tee --append $SCRIPTLOC
+	echo -e '\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.lastUpdateTime' | sudo tee --append $SCRIPTLOC
 	echo -e '\tif [ -z "$(cat $DIR/.currentLocation)" ]; then' | sudo tee --append $SCRIPTLOC
 		echo -e '\t\texit' | sudo tee --append $SCRIPTLOC
 	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
@@ -37,13 +37,13 @@ echo -e '\nfunction getLocation {' | sudo tee --append $SCRIPTLOC
 	echo -e '\t\t/bin/sed -i "s|}|,\"departure\":\"$DEPARTURE\"}|g" $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
 	echo -e '\t\t/bin/echo $(/bin/cat $DIR/.oldLocation) >> $DIR/log' | sudo tee --append $SCRIPTLOC
 	echo -e '\t\t/bin/rm $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/echo $(/bin/date -R) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
+	echo -e '\t\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
 	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
 echo -e '}\n' | sudo tee --append $SCRIPTLOC
 
 echo 'function createDir {' | sudo tee --append $SCRIPTLOC
 	echo -e '\t/bin/mkdir $DIR' | sudo tee --append $SCRIPTLOC
-	echo -e '\t/bin/echo $(/bin/date -R) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
+	echo -e '\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
 echo -e '}\n' | sudo tee --append $SCRIPTLOC
 
 echo 'if [ -d $DIR ]; then' | sudo tee --append $SCRIPTLOC
