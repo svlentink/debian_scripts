@@ -7,7 +7,14 @@ fi
 
 function colorInvertKeybindLubuntu { # tested on lubuntu 15.04
 	# xcalib -s 0 -i -a
-	sed -i 's/<!-- Keybindings for window switching -->/<!--Keybindings for window switching--><keybind key="Super-N"><action name="Execute"><command>xcalib -a -i<\/command><\/action><\/keybind>/g' ~/.config/openbox/*.xml
+	sed -i 's/<!-- Keybindings for window switching -->/<!--Keybindings for window switching--><keybind key="Super-N"><action name="Execute"><command>xcalib -a -i<\/command><\/action><\/keybind><!--hookForNextKeybind-->/g' ~/.config/openbox/*.xml
+	openbox --reconfigure
+}
+
+function xtrLockKeybindLubuntu { # tested on lubuntu 15.10
+	# xtrlock
+	sudo apt install xtrlock
+	sed -i 's/<!--hookForNextKeybind-->/<keybind key="Super-L"><action name="Execute"><command>xtrlock<\/command><\/action><\/keybind><!--hookForNextKeybind-->/g' ~/.config/openbox/*.xml
 	openbox --reconfigure
 }
 
@@ -37,12 +44,14 @@ function suspendOnLowPowerDOESNOTWORK {
 }
 
 function depricatedINSTALLarandr {
-	echo DEPRICATED, from lubuntu 15.04 this is not needed anymore
+	echo DEPRECATED, from lubuntu 15.04 this is not needed anymore
 #	sudo apt-get install arandr #for multiple screens
 }
 
-function addBatteryToTaskbar { # tested on lubuntu 15.04
+function addBatteryToTaskbar { # tested on lubuntu 15.10
 	local dest=~/.config/lxpanel/Lubuntu/panels/panel
+	echo DEPRECATED, this should not be needed anymore
+	exit
 
 	echo Adding battery icon to task bar
 	echo "Plugin {" >> $dest
@@ -53,7 +62,8 @@ function addBatteryToTaskbar { # tested on lubuntu 15.04
 }
 
 colorInvertKeybindLubuntu
+xtrLockKeybindLubuntu
 setSleepButton
 suspendOnLowPower
 sleepWhenLidCloses
-addBatteryToTaskbar
+#addBatteryToTaskbar Not sure, but should be deprecated
