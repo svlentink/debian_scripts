@@ -7,6 +7,7 @@ SCRIPTLOC=/usr/bin/geolocation.sh
 #add file for location service (currently fixed)
 # http://ipinfo.io/json
 # http://ip-api.com/json
+# http://ifconfig.co/json
 # https://freegeoip.net/json/ (currently used)
 
 
