@@ -12,47 +12,51 @@ SCRIPTLOC=/usr/bin/geolocation.sh
 
 
 #create script
-echo '#!/bin/bash' | sudo tee $SCRIPTLOC
-echo 'DIR=$HOME/.local/share/geolocation' | sudo tee --append $SCRIPTLOC
+cat <<'EOF' > $SCRIPTLOC
+#!/bin/bash
+DIR=$HOME/.local/share/geolocation
 
-echo -e '\nfunction getLocation {' | sudo tee --append $SCRIPTLOC
-	echo -e '\tif [ -z "$(cat $DIR/.currentLocation)" ]; then' | sudo tee --append $SCRIPTLOC
-		echo -e '\t\t/bin/echo No last location found' | sudo tee --append $SCRIPTLOC
-	echo -e '\telse' | sudo tee --append $SCRIPTLOC
-		echo -e '\t\t/bin/cp $DIR/.currentLocation $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
+function getLocation {
+	if [ -z "$(cat $DIR/currentLocation)" ]; then
+		/bin/echo No last location found
+	else
+		/bin/cp $DIR/currentLocation $DIR/oldLocation
+	fi
 
-	echo -e '\n\t/usr/bin/wget --no-cache -O $DIR/.currentLocation https://freegeoip.net/json/' | sudo tee --append $SCRIPTLOC
-	echo -e '\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.lastUpdateTime' | sudo tee --append $SCRIPTLOC
-	echo -e '\tif [ -z "$(cat $DIR/.currentLocation)" ]; then' | sudo tee --append $SCRIPTLOC
-		echo -e '\t\texit' | sudo tee --append $SCRIPTLOC
-	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
-	echo -e '\n\tif [ -z "$(/usr/bin/diff $DIR/.currentLocation $DIR/.oldLocation)" ]; then' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/echo Still at the same location' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/rm $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\telse' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/echo Location changed' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\tARRIVED=$(/bin/cat $DIR/.arrivedAtTime)' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\tDEPARTURE=$(/bin/cat $DIR/.lastUpdateTime)' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/sed -i "s|}|,\"arrival\":\"$ARRIVED\"}|g" $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/sed -i "s|}|,\"departure\":\"$DEPARTURE\"}|g" $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/echo $(/bin/cat $DIR/.oldLocation) >> $DIR/log' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/rm $DIR/.oldLocation' | sudo tee --append $SCRIPTLOC
-	echo -e '\t\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
-	echo -e '\tfi' | sudo tee --append $SCRIPTLOC
-echo -e '}\n' | sudo tee --append $SCRIPTLOC
+	/usr/bin/wget --no-cache -O $DIR/currentLocation https://freegeoip.net/json/
+	/bin/echo $(/bin/date -R) > $DIR/lastUpdateTime
+	if [ -z "$(cat $DIR/currentLocation)" ]; then
+		exit
+	fi
 
-echo 'function createDir {' | sudo tee --append $SCRIPTLOC
-	echo -e '\t/bin/mkdir $DIR' | sudo tee --append $SCRIPTLOC
-	echo -e '\t/bin/echo $(/bin/date ---iso-8601=seconds) > $DIR/.arrivedAtTime' | sudo tee --append $SCRIPTLOC
-echo -e '}\n' | sudo tee --append $SCRIPTLOC
+	if [ -z "$(/usr/bin/diff $DIR/currentLocation $DIR/oldLocation)" ]; then
+		/bin/echo Still at the same location
+		/bin/rm $DIR/oldLocation
+	else
+		/bin/echo Location changed
+		ARRIVED=$(/bin/cat $DIR/arrivedAtTime)
+		DEPARTURE=$(/bin/cat $DIR/lastUpdateTime)
+		/bin/sed -i "s|}|,\"arrival\":\"$ARRIVED\"}|g" $DIR/oldLocation
+		/bin/sed -i "s|}|,\"departure\":\"$DEPARTURE\"}|g" $DIR/oldLocation
+		/bin/echo $(/bin/cat $DIR/oldLocation) >> $DIR/log
+		/bin/rm $DIR/oldLocation
+		/bin/echo $(/bin/date -R) > $DIR/arrivedAtTime
+	fi
+}
 
-echo 'if [ -d $DIR ]; then' | sudo tee --append $SCRIPTLOC
-echo -e '\tgetLocation' | sudo tee --append $SCRIPTLOC
-echo 'else' | sudo tee --append $SCRIPTLOC
-echo -e '\tcreateDir' | sudo tee --append $SCRIPTLOC
-echo -e '\tgetLocation' | sudo tee --append $SCRIPTLOC
-echo 'fi' | sudo tee --append $SCRIPTLOC
+function createDir {
+	/bin/mkdir $DIR
+	/bin/echo $(/bin/date -R) > $DIR/arrivedAtTime
+}
+
+if [ -d $DIR ]; then
+	getLocation
+else
+	createDir
+	getLocation
+fi
+
+EOF
 sudo chmod +x $SCRIPTLOC
 
 #creating cron job
