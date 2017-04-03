@@ -12,7 +12,7 @@ exit 0
 fi
 
 TESTS="
-if [ -f /etc/debian_version ]; then echo -n '  debian_verstion ';  cat /etc/debian_version; else echo Not a debian based os; exit 1; fi;
+if [ -f /etc/debian_version ]; then echo -n '  debian_version ';  cat /etc/debian_version; else echo Not a debian based os; exit 1; fi;
 if apt-get update 2>&1 | grep -q ailed; then (echo '  Fetching failed'; exit 1) fi;
 if apt-get --assume-no dist-upgrade | grep upgraded | grep -q '.*[1-9]..*'; then echo '  Updates available'; fi;
 "
