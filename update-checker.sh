@@ -20,7 +20,7 @@ if apt-get --assume-no dist-upgrade | grep upgraded | grep -q '.*[1-9]..*'; then
 
 for host in $@; do
   echo $host
-  ssh -q -o PasswordAuthentication=no $host "$TESTS" 2> /dev/null || true
+  ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $host "$TESTS" 2> /dev/null || true
 done
 
 exit 0
