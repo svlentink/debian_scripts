@@ -2,8 +2,9 @@
 
 function runFromUrl {
 	wget --no-cache -O /tmp/tmpDownloaded.sh $1
+	shift
 	sudo chmod +x /tmp/tmpDownloaded.sh
-	/tmp/tmpDownloaded.sh $2 $3 $4 $5 $6 $7 $8 $9
+	/tmp/tmpDownloaded.sh $@
 }
 
 runFromUrl https://raw.githubusercontent.com/svlentink/debian_scripts/master/ubuntu_basics.sh
