@@ -1,0 +1,11 @@
+# /etc/systemd/system/this.timer 
+[Unit]
+Description=netstats.service job
+
+[Timer]
+# To add a time of your choosing here: `man systemd.time`
+OnUnitActiveSec=5min
+Unit=netstats.service
+
+[Install]
+WantedBy=timers.target

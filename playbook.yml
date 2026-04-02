@@ -1,0 +1,130 @@
+# ansible-playbook -i inventory.ini playbook.yml
+---
+- name: Synchronize files to fs
+  hosts: all
+  become: yes
+
+  vars:
+    timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
+
+  tasks:
+  - name: Synchronize files
+    synchronize:
+      src: ./fs-root/
+      dest: /
+      recursive: yes
+      mode: push # 0644
+      #owner
+      #group
+    register: sync_result
+
+  - name: Install prereq.
+    block:
+    - name: apt packages
+      ansible.builtin.apt:
+        upgrade: dist #yes
+        update_cache: yes
+        state: present
+        autoremove: true
+        autoclean: false
+        name:
+        - apt-transport-https
+        - arp-scan
+        - autossh
+        - curl
+        - git
+        - i2c-tools
+        - nmap
+        - podman
+        - python3-flask
+        - python3-pip
+        - tmux
+        - tree
+        - tree
+        - unzip
+        - vim
+        #- bridge-utils # not needed, we use systemd-networkd
+
+    - name: gpio and i2c packages
+      ansible.builtin.pip:
+        break_system_packages: true
+        name:
+        - gpiod
+
+  - name: Setup SSH reverse tunnel
+    block:
+    - name: Create reverse proxy user
+      ansible.builtin.user:
+        name: sshtunnel
+        system: yes
+        create_home: yes
+        home: /home/sshtunnel
+        shell: /usr/sbin/nologin
+
+    - name: Fix SSH directory permissions
+      ansible.builtin.file:
+        path: /home/sshtunnel/.ssh
+        state: directory
+        owner: sshtunnel
+        group: sshtunnel
+        mode: '0700'
+
+    - name: Generate SSH key for reverse tunnel
+      ansible.builtin.openssh_keypair:
+        path: /home/sshtunnel/.ssh/id_rsa
+        type: rsa # ed25519
+        size: 4096
+        owner: sshtunnel
+        group: sshtunnel
+        mode: '0600'
+
+  - name: Run systemd-networkd
+    block:
+    - name: Enable and start systemd networking services
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - systemd-networkd
+        - systemd-resolved
+
+    - name: Reload systemd if files were synchronized
+      ansible.builtin.systemd_service:
+        daemon_reload: yes
+      when: sync_result.changed
+    #- name: Reload systemd daemon
+    #  command: systemctl daemon-reload
+
+    - name: Enable and start timers
+      ansible.builtin.systemd_service:
+        name: "{{ item | basename }}"
+        enabled: yes
+        state: started
+      loop: "{{ timers }}"
+      when: timers | length > 0
+
+    - name: disable avahi in favor of mdns through systemd networking
+      ansible.builtin.systemd_service:
+        name: avahi-daemon
+        enabled: no
+        state: stopped
+        masked: yes
+
+    - name: disable NetworkManager (on Radxa OS) in favor of systemd networking
+      ansible.builtin.systemd_service: 
+        name: NetworkManager
+        enabled: no
+        state: stopped
+        masked: yes
+      ignore_errors: true # in case not present (Armbian)
+
+    - name: loose the confusion
+      ansible.builtin.apt:
+        state: absent
+        autoremove: true
+        name:
+        - ifupdown
+        - netplan.io
+        - network-manager
+

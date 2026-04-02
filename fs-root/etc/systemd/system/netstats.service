@@ -1,0 +1,9 @@
+#/etc/systemd/system/this.service  
+
+[Unit]
+Description=Get overview of local network
+
+[Service]
+Type=oneshot
+Nice=19 # low priority=19, high priority=-20
+ExecStart=/usr/local/bin/netstats.sh
