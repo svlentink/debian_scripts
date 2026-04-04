@@ -12,8 +12,65 @@
 
   tasks:
 
-  - name: Synchronize files which requires rsync on machine the playbook is run off
-    become: true
+  - name: Install prereq.
+    block:
+    - name: apt packages
+      ansible.builtin.apt:
+        upgrade: dist #yes
+        update_cache: yes
+
+    - name: apt packages
+      ansible.builtin.apt:
+        update_cache: no
+        state: present
+        autoremove: true
+        autoclean: false
+        name:
+        - apt-transport-https
+        - arp-scan
+        - autossh
+        - curl
+        - device-tree-compiler # needed for Radxa OS for custom pin selection
+        - git
+        - i2c-tools
+        - libnss-mdns
+        - nmap
+        - podman
+        - python3-flask
+        - python3-pip
+        - python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old kernel
+        - rsync
+        - tmux
+        - tree
+        - tree
+        - unzip
+        - vim
+        #- bridge-utils # not needed, we use systemd-networkd
+
+    - name: gpio and i2c packages
+      ansible.builtin.pip:
+        break_system_packages: true
+        name:
+        #- i2cdev
+        - gpiod # gpioinfo on shell
+        #- OPi.GPIO
+        #- rpi.gpio
+        #- gpiozero
+        #- pigpio 
+
+  - name: Allow user to run rsync as root without password
+    when: false
+    become: yes
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers.d/rsync_root
+      line: "myuser ALL=(root) NOPASSWD: /usr/bin/rsync"
+      state: present
+      create: yes
+      mode: '0440'
+      validate: '/usr/sbin/visudo -cf %s'
+
+  - name: rsync files
+    become: yes
     ansible.posix.synchronize:
       src: ./fs-root/
       dest: /
@@ -21,6 +78,7 @@
       mode: push # 0644
       archive: yes
       compress: yes
+      #rsync_path: "sudo rsync"
       #owner
       #group
     register: sync_result
@@ -41,47 +99,6 @@
         path: /etc/default/locale
         line: 'LANG=en_CA.UTF-8'
         create: yes
-
-  - name: Install prereq.
-    block:
-    - name: apt packages
-      ansible.builtin.apt:
-        upgrade: dist #yes
-        update_cache: yes
-        state: present
-        autoremove: true
-        autoclean: false
-        name:
-        - apt-transport-https
-        - arp-scan
-        - autossh
-        - curl
-        - device-tree-compiler # needed for Radxa OS for custom pin selection
-        - git
-        - i2c-tools
-        - libnss-mdns
-        - nmap
-        - podman
-        - python3-flask
-        - python3-pip
-        - python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old kernel
-        - tmux
-        - tree
-        - tree
-        - unzip
-        - vim
-        #- bridge-utils # not needed, we use systemd-networkd
-
-    - name: gpio and i2c packages
-      ansible.builtin.pip:
-        break_system_packages: true
-        name:
-        #- i2cdev
-        - gpiod # gpioinfo on shell
-        #- OPi.GPIO
-        #- rpi.gpio
-        #- gpiozero
-        #- pigpio 
 
   - name: Setup SSH reverse tunnel
     block:
