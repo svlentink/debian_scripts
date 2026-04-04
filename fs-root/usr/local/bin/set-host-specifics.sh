@@ -1,8 +1,6 @@
 #!/bin/bash
+set -ue
 
-# The following are expected to be set in host.env
-HOSTNAME=fixme-hostname
-MAC_POSTFIX="01:02:0a" # e.g. first floor, second room, device A
 . /host.env
 
 hostnamectl set-hostname "$HOSTNAME"

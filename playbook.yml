@@ -1,13 +1,16 @@
-# ansible-playbook -i inventory.ini playbook.yml
+# ansible-playbook -i inventory.yml playbook.yml
 ---
 - name: Synchronize files to fs
-  hosts: all
+  hosts: radxa
   become: yes
 
   vars:
     timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
+    reverse_proxy_user: sshtunnel
+    ansible_user_name: ansible
 
   tasks:
+
   - name: Synchronize files
     synchronize:
       src: ./fs-root/
@@ -17,6 +20,23 @@
       #owner
       #group
     register: sync_result
+
+  - name: Set prereq.
+    block:
+    - name: Set timezone
+      community.general.timezone:
+        name: Europe/Lisbon
+
+    - name: Ensure Canadian English locale exists because they use ISO datetime
+      ansible.builtin.locale_gen:
+        name: en_CA.UTF-8
+        state: present
+
+    - name: Set system locale to en_CA.UTF-8
+      ansible.builtin.lineinfile:
+        path: /etc/default/locale
+        line: 'LANG=en_CA.UTF-8'
+        create: yes
 
   - name: Install prereq.
     block:
@@ -32,12 +52,15 @@
         - arp-scan
         - autossh
         - curl
+        - device-tree-compiler # needed for Radxa OS for custom pin selection
         - git
         - i2c-tools
+        - libnss-mdns
         - nmap
         - podman
         - python3-flask
         - python3-pip
+        - python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old kernel
         - tmux
         - tree
         - tree
@@ -49,33 +72,38 @@
       ansible.builtin.pip:
         break_system_packages: true
         name:
-        - gpiod
+        #- i2cdev
+        - gpiod # gpioinfo on shell
+        #- OPi.GPIO
+        #- rpi.gpio
+        #- gpiozero
+        #- pigpio 
 
   - name: Setup SSH reverse tunnel
     block:
     - name: Create reverse proxy user
       ansible.builtin.user:
-        name: sshtunnel
+        name: "{{reverse_proxy_user}}"
         system: yes
         create_home: yes
-        home: /home/sshtunnel
+        home: "/home/{{reverse_proxy_user}}"
         shell: /usr/sbin/nologin
 
     - name: Fix SSH directory permissions
       ansible.builtin.file:
-        path: /home/sshtunnel/.ssh
+        path: "/home/{{reverse_proxy_user}}/.ssh"
         state: directory
-        owner: sshtunnel
-        group: sshtunnel
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
         mode: '0700'
 
     - name: Generate SSH key for reverse tunnel
       ansible.builtin.openssh_keypair:
-        path: /home/sshtunnel/.ssh/id_rsa
+        path: "/home/{{reverse_proxy_user}}/.ssh/id_rsa"
         type: rsa # ed25519
         size: 4096
-        owner: sshtunnel
-        group: sshtunnel
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
         mode: '0600'
 
   - name: Run systemd-networkd
@@ -88,6 +116,13 @@
       loop:
         - systemd-networkd
         - systemd-resolved
+
+    - name: Configure nsswitch hosts line for mDNS + resolved
+      ansible.builtin.lineinfile:
+        path: /etc/nsswitch.conf
+        regexp: '^hosts:'
+        line: 'hosts: files mymachines mdns_minimal [NOTFOUND=return] resolve dns myhostname'
+        backup: yes
 
     - name: Reload systemd if files were synchronized
       ansible.builtin.systemd_service:
@@ -127,4 +162,67 @@
         - ifupdown
         - netplan.io
         - network-manager
+        - bridge-utils
 
+  - name: secure ssh
+    when: false
+    block:
+    - name: Create ansible user
+      ansible.builtin.user:
+        name: "{{ ansible_user_name }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        create_home: yes
+
+    - name: Create .ssh directory
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user_name }}/.ssh"
+        state: directory
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
+        mode: '0700'
+
+    - name: Add public key to authorized_keys (remote host)
+      ansible.builtin.authorized_key:
+        user: "{{ ansible_user_name }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Disable SSH password authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        validate: 'sshd -t -f %s'
+
+    - name: Ensure PubkeyAuthentication is enabled
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        validate: 'sshd -t -f %s'
+
+    - name: Restart SSH service
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    # --- Controller-side task (known_hosts) ---
+    - name: Add remote host key to controller known_hosts
+      delegate_to: localhost
+      become: false
+      ansible.builtin.known_hosts:
+        name: "{{ inventory_hostname }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + inventory_hostname) }}"
+        path: "~/.ssh/known_hosts"
+
+
+# Why Ansible and not cloud-config/armbian_first_run?
+# when you do fire and forget, this first_run makes sense
+# however, we want to do rolling updates/increments
+# and therefore it's desirable to setup Ansible with a hosts list.
+# Do phased roll-outs on changes to test first on one destination device.
+
+#cloud-config
+# cloud-init devel schema --config-file cloud-init.yml
+# /boot/armbian_first_run.txt

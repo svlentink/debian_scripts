@@ -6,11 +6,11 @@
 
 / {
     metadata {
-        title = "Enable TWI4";
+        title = "Enable TWI1";
         compatible = "radxa,cubie-a5e";
         category = "misc";
-        exclusive = "PI1", "PI0", "twi4";
-        description = "Enable TWI4 on Radxa Cubie A5E.";
+        exclusive = "PB5", "PB4", "twi1";
+        description = "Enable TWI1 on Radxa Cubie A5E.";
     };
 };
 
