@@ -59,11 +59,10 @@
         #- pigpio 
 
   - name: Allow user to run rsync as root without password
-    when: false
     become: yes
     ansible.builtin.lineinfile:
       path: /etc/sudoers.d/rsync_root
-      line: "myuser ALL=(root) NOPASSWD: /usr/bin/rsync"
+      line: "{{ansible_user}} ALL=(root) NOPASSWD: /usr/bin/rsync"
       state: present
       create: yes
       mode: '0440'
@@ -84,11 +83,28 @@
     register: sync_result
 
   - name: Set prereq.
+    become: true
     block:
-    - name: Set timezone
+    - name: Set timezone using timedatectl
       community.general.timezone:
         name: Europe/Lisbon
 
+    rescue:
+    - name: Link /etc/localtime to the correct zoneinfo
+      ansible.builtin.file:
+        src: "/usr/share/zoneinfo/Europe/Lisbon"
+        dest: /etc/localtime
+        state: link
+        force: yes
+
+    - name: Write timezone to /etc/timezone
+      ansible.builtin.copy:
+        content: "Europe/Lisbon\n"
+        dest: /etc/timezone
+        mode: '0644'
+
+  - name: Set prereq.
+    block:
     - name: Ensure Canadian English locale exists because they use ISO datetime
       ansible.builtin.locale_gen:
         name: en_CA.UTF-8
@@ -181,6 +197,7 @@
         autoremove: true
         name:
         - ifupdown
+        - nano
         - netplan.io
         - network-manager
         - bridge-utils
