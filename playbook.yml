@@ -1,3 +1,4 @@
+# apt install -y rsync
 # ansible-playbook -i inventory.yml playbook.yml
 ---
 - name: Synchronize files to fs
@@ -11,12 +12,15 @@
 
   tasks:
 
-  - name: Synchronize files
-    synchronize:
+  - name: Synchronize files which requires rsync on machine the playbook is run off
+    become: true
+    ansible.posix.synchronize:
       src: ./fs-root/
       dest: /
       recursive: yes
       mode: push # 0644
+      archive: yes
+      compress: yes
       #owner
       #group
     register: sync_result
