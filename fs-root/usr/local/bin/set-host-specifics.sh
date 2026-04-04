@@ -10,8 +10,7 @@ hostnamectl set-hostname "$HOSTNAME" || echo "$HOSTNAME" > /etc/hostname
 # so the MAC address will be easier to trace to the right type of device
 MAC_PREFIX="`cat /sys/class/net/e*0/address|cut -c 1-8`"
 
-#if [[ -z "`grep MACAddress /etc/systemd/network/br0.netdev`" ]]; then
-mkdir -p /etc/systemd/network/br0.netdev.d/
+mkdir -p /etc/systemd/network/br0.network.d/
 
 cat << EOF > /etc/systemd/network/br0.network.d/mac.conf
 [Link]
