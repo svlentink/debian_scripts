@@ -1,6 +1,8 @@
 # apt install -y rsync
 # ssh-copy-id radxa@192.168.1.173
 # ansible-playbook -i inventory.yml playbook.yml
+# ansible-playbook -i ../ansible/inventory.yml playbook.yml -e "ansible_user=radxa"   -e "ansible_ssh_private_key_file=~/.ssh/id_rsa"   --connection=ssh
+
 ---
 - name: Synchronize files to fs
   hosts: radxa
@@ -12,6 +14,13 @@
     ansible_user_name: ansible
 
   tasks:
+
+  - name: construct MAC address and derive what local link address will be after reboot
+    ansible.builtin.set_fact:
+      mac_address: "02:00:00:{{ location_double_digit }}:00:{{ device_id_double_digit }}"
+      ipv6_link_local: "fe80::ff:fe{{ location_double_digit }}:{{ device_id_double_digit }}" # ansible_host
+      tunnel_port: "{{ location_double_digit }}{{ device_id_double_digit }}"
+
   - name: Install prereq.
     block:
     - name: apt packages
@@ -116,6 +125,16 @@
         line: 'LANG=en_CA.UTF-8'
         create: yes
 
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname_short }}"
+
+    - name: Set port for reverse proxy
+      ansible.builtin.lineinfile:
+        path: /host.env
+        line: "TUNNEL_PORT={{ tunnel_port }}"
+        create: yes
+
   - name: Setup SSH reverse tunnel
     block:
     - name: Create reverse proxy user
@@ -145,6 +164,7 @@
 
   - name: Run systemd-networkd
     block:
+
     - name: Enable and start systemd networking services (it is normal to be kicked out and a new IP when switched to br0)
       ansible.builtin.systemd_service:
         name: "{{ item }}"
@@ -160,6 +180,20 @@
         regexp: '^hosts:'
         line: 'hosts: files mymachines mdns_minimal [NOTFOUND=return] resolve dns myhostname'
         backup: yes
+
+    - name: Create directory for custom MAC address
+      ansible.builtin.file:
+        path: /etc/systemd/network/br0.network.d
+        state: directory
+        mode: '0755'
+
+    - name: set MACAddress
+      ansible.builtin.lineinfblockinfileile:
+        path: /etc/systemd/network/br0.network.d/mac.conf
+        create: yes
+        block: |
+          [Link]
+          MACAddress={{mac_address}}
 
     - name: Reload systemd if files were synchronized
       ansible.builtin.systemd_service:
@@ -215,6 +249,7 @@
         - netplan.io
         - network-manager
         - bridge-utils
+        - avahi-utils
 
   - name: secure ssh
     when: false
