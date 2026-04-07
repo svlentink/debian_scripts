@@ -4,6 +4,12 @@ NET_PREFIX=192.168.1
 OUT_PATH=/run/netstats/
 mkdir -p $OUT_PATH
 
+nmap \
+    -oG $OUT_PATH/nmap.txt \
+    -sn "$NET_PREFIX.0/24"
+
+sleep 1
+
 > $OUT_PATH/ping_response.txt
 for i in {1..254}; do
     ( \
@@ -21,10 +27,6 @@ ip neighbor \
     | uniq \
     | grep -v FAILED \
     | awk '{print $1}' \
-    >> $OUT_PATH/neighbors.txt
+    > $OUT_PATH/neighbors.txt
 
-sleep 1
-
-nmap \
-    -oG $OUT_PATH/nmap.txt \
-    -sn $NET_PREFIX.1/24
+#find /run/netstats/*
