@@ -23,6 +23,16 @@
 
   - name: Install prereq.
     block:
+    - name: Check if Armbian
+      ansible.builtin.command: which armbian-upgrade
+      register: is_armbian
+      failed_when: false
+      changed_when: false
+
+    - name: Run armbian-upgrade
+      ansible.builtin.command: armbian-upgrade -y
+      when: is_armbian.rc == 0
+
     - name: apt packages
       ansible.builtin.apt:
         upgrade: dist #yes
@@ -38,6 +48,7 @@
         - apt-transport-https
         - arp-scan
         - autossh
+        - build-essential # needed for gpiod
         - curl
         - device-tree-compiler # needed for Radxa OS for custom pin selection
         - git
@@ -45,6 +56,7 @@
         - libnss-mdns
         - nmap
         - podman
+        - python3-dev # needed for gpiod
         - python3-flask
         - python3-pip
         - python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old kernel
@@ -211,6 +223,7 @@
       when: timers | length > 0
 
     - name: disable avahi in favor of mdns through systemd networking
+      ignore_errors: yes
       ansible.builtin.systemd_service:
         name: avahi-daemon
         enabled: no
@@ -218,6 +231,7 @@
         masked: yes
 
     - name: disable bluetooth
+      ignore_errors: yes
       ansible.builtin.systemd_service:
         name: bluetooth
         enabled: no
@@ -225,6 +239,7 @@
         masked: yes
 
     - name: disable wifi
+      ignore_errors: yes
       ansible.builtin.systemd_service:
         name: wpa_supplicant
         enabled: no
@@ -232,12 +247,13 @@
         masked: yes
 
     - name: disable NetworkManager (on Radxa OS) in favor of systemd networking
+      ignore_errors: true # in case not present (Armbian)
       ansible.builtin.systemd_service: 
         name: NetworkManager
         enabled: no
         state: stopped
         masked: yes
-      ignore_errors: true # in case not present (Armbian)
+
 
     - name: loose the confusion
       ansible.builtin.apt:
