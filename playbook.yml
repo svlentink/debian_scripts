@@ -47,10 +47,12 @@
         name:
         - apt-transport-https
         - arp-scan
+        - arping # layer 2 ping
         - autossh
         - build-essential # needed for gpiod
         - curl
         - device-tree-compiler # needed for Radxa OS for custom pin selection
+        - dnsutils
         - git
         - i2c-tools
         - libnss-mdns
@@ -59,7 +61,6 @@
         - python3-dev # needed for gpiod
         - python3-flask
         - python3-pip
-        - python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old kernel
         - rsync
         - tmux
         - tree
@@ -67,6 +68,7 @@
         - unzip
         - vim
         #- bridge-utils # not needed, we use systemd-networkd
+        #- python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old debian
 
     - name: gpio and i2c packages
       ansible.builtin.pip:
@@ -78,6 +80,8 @@
         #- rpi.gpio
         #- gpiozero
         #- pigpio 
+        - pyyaml
+        - smbus2
 
   - name: Allow user to run rsync as root without password
     become: yes
@@ -199,6 +203,8 @@
         state: directory
         mode: '0755'
 
+    # We set a specific MAC since this will lead to a predictable IPv6 link local address
+    # besides that, we observed when buying multiple Radxa boards that we had duplicate MACs
     - name: set MACAddress
       ansible.builtin.blockinfile:
         path: /etc/systemd/network/br0.network.d/mac.conf

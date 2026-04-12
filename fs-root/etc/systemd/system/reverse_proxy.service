@@ -1,0 +1,30 @@
+[Unit]
+Description=Reverse SSH Tunnel Service (autossh)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=youruser
+Group=youruser
+
+ExecStartPre=/usr/bin/test -x /usr/local/bin/reverse_proxy.sh # check if user is able to execute file
+ExecStart=/usr/local/bin/reverse_proxy.sh
+
+Restart=always
+RestartSec=300
+StartLimitIntervalSec=0
+
+TimeoutStartSec=0
+KillMode=process # kill off dormant SSH process
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
