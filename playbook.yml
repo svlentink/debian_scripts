@@ -18,6 +18,12 @@
   - name: construct MAC address and derive what local link address will be after reboot
     ansible.builtin.set_fact:
       mac_address: "02:00:00:{{ location_double_digit }}:00:{{ device_id_double_digit }}"
+      # a quick remark on link-local and mdns
+      # link local is only for machine to machine and we use the mac address to get a predicatable link local address
+      # however, expect this to be blocked by the browser
+      # then you might think, the dhcp assigned address can be used based on mdns name,
+      # but this only works if the user has no form of private DNS activated,
+      # therefor, you cannot rely on any of these two.
       ipv6_link_local: "fe80::ff:fe{{ location_double_digit }}:{{ device_id_double_digit }}" # ansible_host
       tunnel_port: "{{ location_double_digit }}{{ device_id_double_digit }}"
 
@@ -70,7 +76,7 @@
         #- bridge-utils # not needed, we use systemd-networkd
         #- python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old debian
 
-    - name: gpio and i2c packages
+    - name: pip packages
       ansible.builtin.pip:
         break_system_packages: true
         name:
