@@ -1,1 +1,1 @@
-/etc/systemd/system/netstats.timer
+/lib/systemd/system/netstats.timer
