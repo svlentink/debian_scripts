@@ -2,6 +2,8 @@
 
 [Unit]
 Description=Get overview of local network
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=oneshot

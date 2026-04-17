@@ -9,7 +9,7 @@
   become: yes
 
   vars:
-    timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
+    #timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
     reverse_proxy_user: sshtunnel
     ansible_user_name: ansible
 
@@ -62,6 +62,7 @@
         - git
         - i2c-tools
         - libnss-mdns
+        - nftables # to block ssh on ipv6
         - nmap
         - podman
         - python3-dev # needed for gpiod
@@ -99,10 +100,10 @@
       mode: '0440'
       validate: '/usr/sbin/visudo -cf %s'
 
-  - name: rsync files
+  - name: rsync default files
     become: yes
     ansible.posix.synchronize:
-      src: ./fs-root/
+      src: ./fs-root/default
       dest: /
       recursive: yes
       mode: push # 0644
@@ -111,7 +112,18 @@
       #rsync_path: "sudo rsync"
       #owner
       #group
-    register: sync_result
+    register: sync_default
+
+  - name: rsync machine files
+    become: yes
+    ansible.posix.synchronize:
+      src: "./fs-root/{{inventory_hostname}}"
+      dest: /
+      recursive: yes
+      mode: push # 0644
+      archive: yes
+      compress: yes
+    register: sync_host
 
   - name: Set prereq.
     become: true
@@ -185,8 +197,8 @@
         mode: '0600'
 
   - name: Run systemd-networkd
+    when: sync_default.changed or sync_host.changed
     block:
-
     - name: Enable and start systemd networking services (it is normal to be kicked out and a new IP when switched to br0)
       ansible.builtin.systemd_service:
         name: "{{ item }}"
@@ -222,7 +234,6 @@
     - name: Reload systemd if files were synchronized
       ansible.builtin.systemd_service:
         daemon_reload: yes
-      when: sync_result.changed
     #- name: Reload systemd daemon
     #  command: systemctl daemon-reload
 
@@ -232,7 +243,8 @@
         enabled: yes
         state: started
       loop: "{{ timers }}"
-      when: timers | length > 0
+      when: false # we use symlinks instead and sync them
+      #when: timers | length > 0
 
     - name: disable avahi in favor of mdns through systemd networking
       ignore_errors: yes
@@ -265,7 +277,6 @@
         enabled: no
         state: stopped
         masked: yes
-
 
     - name: loose the confusion
       ansible.builtin.apt:

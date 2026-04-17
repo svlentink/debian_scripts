@@ -1,0 +1,21 @@
+gpio:
+  7:
+    label: K1
+    name: desk
+    COM: L1
+    'NO': power socket desk
+  10:
+    label: K2
+    name: heater
+    COM: L1
+    'NO': under desk heater
+  8:
+    label: K3
+    name: bed
+    COM: L1
+    'NO': power socket above bed
+  11:
+    label: K4
+    name: door
+    COM: L1
+    'NO': 12dc door lock

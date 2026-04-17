@@ -1,0 +1,44 @@
+i2c:
+  1: #i2cbus
+    '0x20': #chip-address
+      0x06: #data-address
+      - label: A0
+        name: door
+        COM: 12V
+        'NO': door_lock
+        auto_off_sec: 2
+      - label: A1
+        name: transformer
+        COM: L1
+        'NO': L1_12V
+        auto_off_sec: 2
+      - label: A2
+        name: light
+        COM: L1
+        'NO': desk_light
+        auto_off_sec: 36000
+      - label: A3
+        name: socket
+        COM: L1
+        'NO': desk_socket
+      - label: A4
+        name: mosquito
+        COM: L1
+        'NO': mosquito_socket
+        auto_off_sec: 3600
+      - label: A5
+        name: projector
+        COM: L1
+        'NO': projector
+        auto_off_sec: 14400 # 4h
+      - label: A6
+        name: AC or heater
+        COM: L1_AC
+        'NO': heater_under_desk
+        NC: AC
+        auto_off_sec: 14400
+      - label: A7
+        name: signal_AC
+        COM: AC_signal
+        'NO': COMM_condenstation_pump
+

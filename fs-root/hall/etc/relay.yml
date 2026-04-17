@@ -1,0 +1,228 @@
+
+i2c:
+# hall
+  1: #i2cbus
+    '0x20': #chip-address
+      '0x06': #data-address
+      - label: A0
+        name: ac
+        COM: L1_AC
+        'NO': spare_powersocket
+        NC: AC
+        location: attic
+      - label: A1
+        name: _
+        COM: _
+        desc: no lock present, just cables prepared
+        NC: _
+        'NO': hall_storage_doorlock
+        auto_off_sec: 2
+        location: hall
+      - label: A2
+        name: _
+        COM: _
+        'NO': _
+        NC: _
+      - label: A3
+        name: _
+        COM: _
+        'NO': _
+        NC: _
+      - label: A4
+        name: building_entrance_door
+        COM: intercom_24vAC
+        'NO': building_entrance_door
+        NC: _
+        auto_off_sec: 2
+        location: ground_floor
+      - label: A5
+        name: disable_building_entrance
+        desc: privacy, ability to disable to opening of building door by doorbell
+        COM: relay_dual.4_NO2
+        'NO': _
+        NC: multi_relay.signal
+        auto_off_sec: 36000
+        location: ground_floor
+      - label: A6
+        name: front_door
+        COM: L1_networking
+        'NO': 12vDC_networking.L1
+        NC: _
+        auto_off_sec: 30
+        command_on: 'date -I=minutes >> /var/log/front-door-opened.log'
+        location: hall
+      - label: A7
+        name: watchdog
+        COM: L1_networking
+        'NO': _
+        NC: watchdog_A1
+        auto_off_sec: 5
+        location: hall
+      '0x07':
+      - label: B7
+        name: _
+        COM: _
+        'NO': _
+        NC: _
+      - label: B6
+        name: _
+        COM: _
+        'NO': _
+        NC: _
+      - label: B5
+        name: _
+        COM: _
+        'NO': _
+        NC: _
+      - label: B4
+        name: light
+        COM: L1_rooms
+        'NO': hall_lights
+        NC: _
+        location: hall
+      - label: B3
+        name: roomD
+        COM: L1_rooms
+        'NO': _
+        NC: roomD
+        location: rooms
+      - label: B2
+        name: roomC
+        COM: L1_rooms
+        'NO': _
+        NC: roomC
+        location: rooms
+      - label: B1
+        name: roomB
+        COM: L1_rooms
+        NC: roomB
+        location: rooms
+      - label: B0
+        name: roomA
+        COM: L1_rooms
+        'NO': _
+        NC: roomA
+        location: rooms
+
+# kitchen
+  4: #i2cbus
+    '0x20': #chip-address
+      0x06: #data-address
+      - label: A0
+        name: microwave
+        COM: L1_kitchen
+        'NO': microwave
+        NC: _
+        auto_off_sec: 1800
+        location: kitchen
+      - label: A1
+        name: fryer
+        COM: L1_kitchen
+        NC: _
+        'NO': air_fryer
+        auto_off_sec: 3600
+        location: kitchen
+      - label: A2
+        name: power_socket
+        COM: L1_kitchen
+        'NO': 16A_socket
+        NC: _
+        auto_off_sec: 7200
+        location: kitchen
+      - label: A3
+        name: corner_socket
+        COM: L1_kitchen
+        'NO': 10A_corner_sockets
+        NC: _
+        auto_off_sec: 7200
+        location: kitchen
+      - label: A4
+        name: kitchen_light
+        COM: L1_kitchen
+        'NO': lights
+        NC: _
+        auto_off_sec: 7200
+        location: kitchen
+      - label: A5
+        name: hob
+        COM: L1_kitchen
+        'NO': Cooking hob and suction hood
+        NC: _
+        auto_off_sec: 7200
+        location: kitchen
+      - label: A6
+        name: coffee
+        COM: L1_kitchen
+        'NO': coffee
+        NC: _
+        auto_off_sec: 600
+        location: kitchen
+      - label: A7
+        name: oven
+        COM: L1_kitchen
+        'NO': oven
+        NC: _
+        auto_off_sec: 7200
+        location: kitchen
+      0x07:
+      - label: B7
+        name: balcony_socket
+        desc: power socket under desk
+        COM: L1_balcony
+        'NO': desk_switched
+        NC: _
+        auto_off_sec: 36000
+        location: balcony
+      - label: B6
+        name: balcony_light
+        COM: L1_balcony
+        'NO': desk_light
+        NC: _
+        auto_off_sec: 14400 # 4h
+        location: balcony
+      - label: B5
+        name: balcony_heater
+        COM: L1_heat
+        'NO': heater_under_desk
+        NC: _
+        auto_off_sec: 14400 # 4h
+        location: balcony
+      - label: B4
+        name: hotwater
+        desc: 300L water tank located on balcony
+        COM: L1_heat
+        'NO': _
+        NC: watertank
+        location: balcony
+      - label: B3
+        name: washer
+        COM: L1_laundry
+        'NO': washer
+        NC: _
+        auto_off_sec: 14400 # 4h
+        location: laundry
+      - label: B2
+        name: dryer
+        COM: L1_laundry
+        'NO': dryer
+        NC: _
+        auto_off_sec: 18000 # 5h
+        location: laundry
+      - label: B1
+        name: dishwasher
+        COM: L1_kitchen
+        'NO': dishwasher
+        NC: _
+        auto_off_sec: 14400 # 4h
+        location: kitchen
+      - label: B0
+        name: kettle
+        desc: since we do not use a quooker tap NC is used for the robo vacuum charger
+        COM: L1_kitchen
+        NC: tap
+        'NO': kettle
+        auto_off_sec: 600
+        location: kitchen
+
+
+

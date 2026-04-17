@@ -1,0 +1,23 @@
+[Unit]
+Description=HTTP python
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+
+ExecStartPre=/usr/bin/test -x /usr/local/bin/server.py # check if user is able to execute file
+ExecStart=/usr/local/bin/server.py
+
+Restart=always
+RestartSec=300
+StartLimitIntervalSec=0
+
+TimeoutStartSec=0
+KillMode=process # kill off dormant
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
