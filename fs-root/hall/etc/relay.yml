@@ -5,7 +5,7 @@ i2c:
     '0x20': #chip-address
       '0x06': #data-address
       - label: A0
-        name: ac
+        name: disable_ac
         COM: L1_AC
         'NO': spare_powersocket
         NC: AC

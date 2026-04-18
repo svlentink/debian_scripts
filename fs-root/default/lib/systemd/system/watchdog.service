@@ -1,0 +1,6 @@
+[Unit]
+Description=Trigger watchdog to prove network is still online
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl http://hall.local/watchdog/1

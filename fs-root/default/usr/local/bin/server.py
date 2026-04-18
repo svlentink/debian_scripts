@@ -28,7 +28,7 @@ def serve_buttons():
 def serve_nmap():
     with open("/run/netstats/nmap.txt", "r") as f:
         content = f.read()
-    return content
+    return(f"<textarea style='font-family:monospace;width:90%;height:90%;'>{content}</textarea>",200)
 
 if __name__ == '__main__':
   app.run(debug=True, port=80, host='::')
