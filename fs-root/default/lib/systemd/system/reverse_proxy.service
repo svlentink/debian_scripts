@@ -17,7 +17,8 @@ RestartSec=300
 StartLimitIntervalSec=0
 
 TimeoutStartSec=0
-KillMode=process # kill off dormant SSH process
+# kill off dormant SSH process
+KillMode=process
 
 NoNewPrivileges=true
 PrivateTmp=true
