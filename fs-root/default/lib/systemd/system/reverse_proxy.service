@@ -8,7 +8,8 @@ Type=simple
 User=youruser
 Group=youruser
 
-ExecStartPre=/usr/bin/test -x /usr/local/bin/reverse_proxy.sh # check if user is able to execute file
+# check if user is able to execute file
+ExecStartPre=/usr/bin/test -x /usr/local/bin/reverse_proxy.sh
 ExecStart=/usr/local/bin/reverse_proxy.sh
 
 Restart=always

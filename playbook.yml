@@ -103,7 +103,7 @@
   - name: rsync default files
     become: yes
     ansible.posix.synchronize:
-      src: ./fs-root/default
+      src: ./fs-root/default/
       dest: /
       recursive: yes
       mode: push # 0644
@@ -117,7 +117,7 @@
   - name: rsync machine files
     become: yes
     ansible.posix.synchronize:
-      src: "./fs-root/{{inventory_hostname}}"
+      src: "./fs-root/{{inventory_hostname}}/"
       dest: /
       recursive: yes
       mode: push # 0644

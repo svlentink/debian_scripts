@@ -6,7 +6,8 @@ After=network-online.target
 [Service]
 Type=simple
 
-ExecStartPre=/usr/bin/test -x /usr/local/bin/server.py # check if user is able to execute file
+# check if user is able to execute file
+ExecStartPre=/usr/bin/test -x /usr/local/bin/server.py
 ExecStart=/usr/local/bin/server.py
 
 Restart=always
