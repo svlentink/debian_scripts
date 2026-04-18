@@ -1,4 +1,3 @@
-#/etc/systemd/system/this.service  
 
 [Unit]
 Description=Get overview of local network
