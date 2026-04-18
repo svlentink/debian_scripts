@@ -12,6 +12,7 @@
     #timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
     reverse_proxy_user: sshtunnel
     ansible_user_name: ansible
+    timezone: Europe/Lisbon
 
   tasks:
 
@@ -36,10 +37,12 @@
       changed_when: false
 
     - name: Run armbian-upgrade
+      ignore_errors: true
       ansible.builtin.command: armbian-upgrade -y
       when: is_armbian.rc == 0
 
-    - name: apt packages
+    - name: apt upgrade
+      ignore_errors: true
       ansible.builtin.apt:
         upgrade: dist #yes
         update_cache: yes
@@ -130,19 +133,19 @@
     block:
     - name: Set timezone using timedatectl
       community.general.timezone:
-        name: Europe/Lisbon
+        name: "{{ timezone }}"
 
     rescue:
     - name: Link /etc/localtime to the correct zoneinfo
       ansible.builtin.file:
-        src: "/usr/share/zoneinfo/Europe/Lisbon"
+        src: "/usr/share/zoneinfo/{{ timezone }}"
         dest: /etc/localtime
         state: link
         force: yes
 
     - name: Write timezone to /etc/timezone
       ansible.builtin.copy:
-        content: "Europe/Lisbon\n"
+        content: "{{ timezone }}\n"
         dest: /etc/timezone
         mode: '0644'
 

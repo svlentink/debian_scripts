@@ -27,7 +27,6 @@ ip neighbor \
     | uniq \
     | grep -v FAILED \
     | awk '{print $1}' \
-    >>
-     $OUT_PATH/neighbors.txt
+    >> $OUT_PATH/neighbors.txt
 
 #find /run/netstats/*

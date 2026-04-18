@@ -24,5 +24,11 @@ def serve_homepage():
 def serve_buttons():
     return rb.html()
 
+@app.route('/nmap', methods=['GET'])
+def serve_nmap():
+    with open("/run/netstats/nmap.txt", "r") as f:
+        content = f.read()
+    return content
+
 if __name__ == '__main__':
   app.run(debug=True, port=80, host='::')
