@@ -4,7 +4,7 @@ Description=netstats.service job
 [Timer]
 # To add a time of your choosing here: `man systemd.time`
 OnBootSec=1min
-OnUnitActiveSec=5min
+OnUnitInactiveSec=5min
 Unit=netstats.service
 
 [Install]
