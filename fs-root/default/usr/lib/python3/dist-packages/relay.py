@@ -163,10 +163,13 @@ class RelayBoard:
             result += str(i) + str(relay)
         return result
     def html(self):
-        result = ''
+        result = {}
         for r in self.relays:
-            result += r.html()
-        return result
+            loc = r.data["location"] if "location" in r.data else '_'
+            if loc not in result:
+                result[loc] = f"<hr/>{loc}<br/>"
+            result[loc] += r.html()
+        return "<br/>".join(result.values())
 
     def get(self, name: str):
         if name.isdigit():

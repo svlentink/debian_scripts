@@ -10,7 +10,7 @@ rb = relay.RelayBoard()
 relay.SPECIAL_CHARS_IN_REPR_RELAY=True
 
 @app.route('/<name>/<engaged>')
-def set_relay(name, engaged):
+def set_relay(name, engaged): # FIXME engaged should be 0 for off, 1 for on, or a specific nummer for a timeout
     for n in name.split(','):
         rb.set(n, engaged)
     return 'OK'

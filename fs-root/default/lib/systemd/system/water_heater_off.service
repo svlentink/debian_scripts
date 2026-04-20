@@ -1,0 +1,6 @@
+[Unit]
+Description=Disable water heater
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl http://hall.local/disable_water_heater/1

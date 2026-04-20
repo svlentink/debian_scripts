@@ -188,7 +188,7 @@ i2c:
         auto_off_sec: 14400 # 4h
         location: balcony
       - label: B4
-        name: hotwater
+        name: disable_water_heater
         desc: 300L water tank located on balcony
         COM: L1_heat
         'NO': _

@@ -1,0 +1,9 @@
+[Unit]
+Description=water_heater_off.service job
+
+[Timer]
+OnCalendar=*-*-* 07:00:00
+Unit=water_heater_off.service
+
+[Install]
+WantedBy=timers.target

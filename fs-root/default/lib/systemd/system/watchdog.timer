@@ -5,6 +5,7 @@ Description=watchdog.service job
 # To add a time of your choosing here: `man systemd.time`
 OnBootSec=1min
 OnUnitActiveSec=2h
+Persistent=true
 Unit=watchdog.service
 
 [Install]

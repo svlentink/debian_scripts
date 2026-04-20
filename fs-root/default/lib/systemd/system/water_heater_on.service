@@ -1,0 +1,6 @@
+[Unit]
+Description=Undo the disable water heater so it heats up the water
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl http://hall.local/disable_water_heater/0
