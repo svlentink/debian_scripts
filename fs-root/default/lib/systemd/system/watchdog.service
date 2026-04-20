@@ -3,4 +3,4 @@ Description=Trigger watchdog to prove network is still online
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/curl http://[fe80::ff:fe56:40%br0]/watchdog/1
+ExecStart=/usr/bin/curl http://[fe80::ff:fe56:40%%br0]/watchdog/1

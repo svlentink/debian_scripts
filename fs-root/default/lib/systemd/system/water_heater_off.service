@@ -3,4 +3,4 @@ Description=Disable water heater
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/curl http://[fe80::ff:fe56:40%br0]/disable_water_heater/1
+ExecStart=/usr/bin/curl http://[fe80::ff:fe56:40%%br0]/disable_water_heater/1
