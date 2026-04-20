@@ -7,25 +7,30 @@ i2c:
         COM: 12V
         'NO': door_lock
         auto_off_sec: 2
+        location: door
       - label: A1
         name: transformer
         COM: L1
         'NO': L1_12V
         auto_off_sec: 2
+        location: door
       - label: A2
         name: light
         COM: L1
         'NO': desk_light
         auto_off_sec: 36000
+        location: desk
       - label: A3
         name: socket
         COM: L1
         'NO': desk_socket
+        location: desk
       - label: A4
         name: mosquito
         COM: L1
         'NO': mosquito_socket
         auto_off_sec: 3600
+        location: ac
       - label: A5
         name: projector
         COM: L1
@@ -37,8 +42,10 @@ i2c:
         'NO': heater_under_desk
         NC: AC
         auto_off_sec: 14400
+        location: ac
       - label: A7
         name: signal_AC
         COM: AC_signal
         'NO': COMM_condenstation_pump
+        location: ac
 
