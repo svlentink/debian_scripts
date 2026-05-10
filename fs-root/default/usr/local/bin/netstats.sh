@@ -1,20 +1,20 @@
 #!/bin/bash
 
-NET_PREFIX=192.168.1
+. /host.env
 OUT_PATH=/run/netstats/
 mkdir -p $OUT_PATH
 
 nmap \
     -oG $OUT_PATH/nmap.txt \
-    -sn "$NET_PREFIX.0/24"
+    -sn "$LOCALNET_PREFIX.0/24"
 
 sleep 1
 
 > $OUT_PATH/ping_response.txt
 for i in {1..254}; do
     ( \
-        ping -c 1 -W 1 $NET_PREFIX.$i > /dev/null \
-        && echo $NET_PREFIX.$i \
+        ping -c 1 -W 1 $LOCALNET_PREFIX.$i > /dev/null \
+        && echo $LOCALNET_PREFIX.$i \
         >> $OUT_PATH/ping_response.txt \
     ) & true;
 done
@@ -30,3 +30,6 @@ ip neighbor \
     >> $OUT_PATH/neighbors.txt
 
 #find /run/netstats/*
+
+# FIXME
+# https://github.com/dkran/nmap2json

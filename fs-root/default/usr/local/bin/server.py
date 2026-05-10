@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 # should be located in: /usr/local/bin/
 
+# FIXME
+# openapi
+# https://flask-smorest.readthedocs.io/en/latest/index.html
+# https://flask-smorest.readthedocs.io/en/latest/quickstart.html
+# https://github.com/luolingchun/flask-openapi
+# https://github.com/openapi-generators/openapi-python-client
+
 from flask import Flask
 from flask import request
 import relay 

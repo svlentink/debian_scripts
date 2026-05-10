@@ -1,0 +1,22 @@
+# Save this at /etc/containers/systemd/relay-control.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: relay-controller
+spec:
+  containers:
+  - name: relay-app
+    image: localhost/python-relay-image:latest
+    securityContext:
+      privileged: false # Keep it secure
+    volumeMounts:
+    - name: script-storage
+      mountPath: /app
+    # Note: K8s YAML doesn't have a native 'devices' field in standard Pod spec 
+    # for specific paths like /dev/i2c, but Podman's 'kube play' supports 
+    # mapping them via annotations or hostPath for simple setups.
+    volumes:
+    - name: script-storage
+      hostPath:
+        path: /home/pi/relay-project # Local path on Host
+        type: Directory

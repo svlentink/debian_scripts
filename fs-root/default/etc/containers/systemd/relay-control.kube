@@ -1,0 +1,20 @@
+# Save this at /etc/containers/systemd/relay-control.kube
+[Unit]
+Description=Relay Controller Quadlet Service
+After=network-online.target
+
+[Kube]
+Yaml=relay-control.yaml
+
+# This is where we inject the hardware access Quadlet-style
+Device=/dev/i2c-1:/dev/i2c-1
+Device=/dev/gpiomem:/dev/gpiomem
+
+# Ensure the container user has permission to hit the hardware
+# These IDs correspond to the 'i2c' and 'gpio' groups on Raspbian
+GroupAdd=998 # i2c group ID
+GroupAdd=997 # gpio group ID
+
+[Install]
+# Start this on boot
+WantedBy=multi-user.target default.target

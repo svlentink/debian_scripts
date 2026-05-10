@@ -6,5 +6,6 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-Nice=19 # low priority=19, high priority=-20
+# low priority=19, high priority=-20
+Nice=19
 ExecStart=/usr/local/bin/netstats.sh

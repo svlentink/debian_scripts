@@ -1,0 +1,312 @@
+# ansible-playbook -i inventory.yml playbook.yml
+
+---
+- name: Synchronize files to fs
+  hosts: nas
+  become: yes
+
+  vars:
+    #timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
+    reverse_proxy_user: sshtunnel
+    ansible_user_name: ansible
+    timezone: Europe/Amsterdam
+
+  tasks:
+
+  - name: construct MAC address and derive what local link address will be after reboot
+    ansible.builtin.set_fact:
+      mac_address: "02:00:00:{{ location_double_digit }}:00:{{ device_id_double_digit }}"
+      # a quick remark on link-local and mdns
+      # link local is only for machine to machine and we use the mac address to get a predicatable link local address
+      # however, expect this to be blocked by the browser
+      # then you might think, the dhcp assigned address can be used based on mdns name,
+      # but this only works if the user has no form of private DNS activated,
+      # therefor, you cannot rely on any of these two.
+      ipv6_link_local: "fe80::ff:fe{{ location_double_digit }}:{{ device_id_double_digit }}" # ansible_host
+      tunnel_port: "{{ location_double_digit }}{{ device_id_double_digit }}"
+
+  - name: Install prereq.
+    block:
+    - name: Check if Armbian
+      ansible.builtin.command: which armbian-upgrade
+      register: is_armbian
+      failed_when: false
+      changed_when: false
+
+    - name: Run armbian-upgrade
+      ignore_errors: true
+      ansible.builtin.command: armbian-upgrade -y
+      when: is_armbian.rc == 0
+
+    - name: apt upgrade
+      ignore_errors: true
+      ansible.builtin.apt:
+        upgrade: dist #yes
+        update_cache: yes
+
+    - name: apt packages
+      ansible.builtin.apt:
+        update_cache: no
+        state: present
+        autoremove: true
+        autoclean: false
+        name:
+        - apt-transport-https
+        - arp-scan
+        - arping # layer 2 ping
+        - autossh
+        - curl
+        - dnsutils
+        - git
+        - libnss-mdns
+        - nftables # to block ssh on ipv6
+        - nmap
+        - python3-flask
+        - python3-pip
+        - rsync
+        - tmux
+        - tree
+        - unzip
+        - vim
+
+    - name: pip packages
+      ansible.builtin.pip:
+        break_system_packages: true
+        name:
+        - pyyaml
+
+  - name: Allow user to run rsync as root without password
+    become: yes
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers.d/rsync_root
+      line: "{{ansible_user}} ALL=(root) NOPASSWD: /usr/bin/rsync"
+      state: present
+      create: yes
+      mode: '0440'
+      validate: '/usr/sbin/visudo -cf %s'
+
+  - name: rsync default files
+    become: yes
+    ansible.posix.synchronize:
+      src: ./fs-root/default/
+      dest: /
+      recursive: yes
+      mode: push # 0644
+      archive: yes
+      compress: yes
+      #rsync_path: "sudo rsync"
+      #owner
+      #group
+    register: sync_default
+
+  - name: rsync machine files
+    become: yes
+    ansible.posix.synchronize:
+      src: "./fs-root/{{inventory_hostname}}/"
+      dest: /
+      recursive: yes
+      mode: push # 0644
+      archive: yes
+      compress: yes
+    register: sync_host
+
+  - name: Set prereq.
+    become: true
+    block:
+    - name: Set timezone using timedatectl
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    rescue:
+    - name: Link /etc/localtime to the correct zoneinfo
+      ansible.builtin.file:
+        src: "/usr/share/zoneinfo/{{ timezone }}"
+        dest: /etc/localtime
+        state: link
+        force: yes
+
+    - name: Write timezone to /etc/timezone
+      ansible.builtin.copy:
+        content: "{{ timezone }}\n"
+        dest: /etc/timezone
+        mode: '0644'
+
+  - name: Set prereq.
+    block:
+    - name: Ensure Canadian English locale exists because they use ISO datetime
+      ansible.builtin.locale_gen:
+        name: en_CA.UTF-8
+        state: present
+
+    - name: Set system locale to en_CA.UTF-8
+      ansible.builtin.lineinfile:
+        path: /etc/default/locale
+        line: 'LANG=en_CA.UTF-8'
+        create: yes
+
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname_short }}"
+
+    - name: Set port for reverse proxy
+      ansible.builtin.lineinfile:
+        path: /host.env
+        line: "TUNNEL_PORT={{ tunnel_port }}"
+        create: yes
+
+    - name: Set local lan prefix
+      ansible.builtin.lineinfile:
+        path: /host.env
+        line: "LOCALNET_PREFIX={{ localnet_prefix }}"
+        create: yes
+
+  - name: Setup SSH reverse tunnel
+    block:
+    - name: Create reverse proxy user
+      ansible.builtin.user:
+        name: "{{reverse_proxy_user}}"
+        system: yes
+        create_home: yes
+        home: "/home/{{reverse_proxy_user}}"
+        shell: /usr/sbin/nologin
+
+    - name: Fix SSH directory permissions
+      ansible.builtin.file:
+        path: "/home/{{reverse_proxy_user}}/.ssh"
+        state: directory
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
+        mode: '0700'
+
+    - name: Generate SSH key for reverse tunnel
+      ansible.builtin.openssh_keypair:
+        path: "/home/{{reverse_proxy_user}}/.ssh/id_rsa"
+        type: rsa # ed25519
+        size: 4096
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
+        mode: '0600'
+
+  - name: Run systemd-networkd
+    when: sync_default.changed or sync_host.changed
+    block:
+    - name: Enable and start systemd networking services (it is normal to be kicked out and a new IP when switched to br0)
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - systemd-networkd
+        - systemd-resolved
+
+    - name: Configure nsswitch hosts line for mDNS + resolved
+      ansible.builtin.lineinfile:
+        path: /etc/nsswitch.conf
+        regexp: '^hosts:'
+        line: 'hosts: files mymachines mdns_minimal [NOTFOUND=return] resolve dns myhostname'
+        backup: yes
+
+    - name: Create directory for custom MAC address
+      ansible.builtin.file:
+        path: /etc/systemd/network/br0.network.d
+        state: directory
+        mode: '0755'
+
+    # We set a specific MAC since this will lead to a predictable IPv6 link local address
+    # besides that, we observed when buying multiple Radxa boards that we had duplicate MACs
+    - name: set MACAddress
+      ansible.builtin.blockinfile:
+        path: /etc/systemd/network/br0.network.d/mac.conf
+        create: yes
+        block: |
+          [Link]
+          MACAddress={{mac_address}}
+
+    - name: Reload systemd if files were synchronized
+      ansible.builtin.systemd_service:
+        daemon_reload: yes
+    #- name: Reload systemd daemon
+    #  command: systemctl daemon-reload
+
+
+    - name: disable avahi in favor of mdns through systemd networking
+      ignore_errors: yes
+      ansible.builtin.systemd_service:
+        name: avahi-daemon
+        enabled: no
+        state: stopped
+        masked: yes
+
+    - name: disable bluetooth
+      ignore_errors: yes
+      ansible.builtin.systemd_service:
+        name: bluetooth
+        enabled: no
+        state: stopped
+        masked: yes
+
+    - name: disable wifi
+      ignore_errors: yes
+      ansible.builtin.systemd_service:
+        name: wpa_supplicant
+        enabled: no
+        state: stopped
+        masked: yes
+
+    - name: disable NetworkManager (on Radxa OS) in favor of systemd networking
+      ignore_errors: true # in case not present (Armbian)
+      ansible.builtin.systemd_service: 
+        name: NetworkManager
+        enabled: no
+        state: stopped
+        masked: yes
+
+    - name: loose the confusion
+      ansible.builtin.apt:
+        state: absent
+        autoremove: true
+        name:
+        - ifupdown
+        - nano
+        - netplan.io
+        - network-manager
+        - bridge-utils
+        - avahi-utils
+
+  - name: secure ssh
+    when: false
+    block:
+    - name: Create ansible user
+      ansible.builtin.user:
+        name: "{{ ansible_user_name }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        create_home: yes
+
+    - name: Create .ssh directory
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user_name }}/.ssh"
+        state: directory
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
+        mode: '0700'
+
+    - name: Add public key to authorized_keys (remote host)
+      ansible.builtin.authorized_key:
+        user: "{{ ansible_user_name }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Restart SSH service
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    # --- Controller-side task (known_hosts) ---
+    - name: Add remote host key to controller known_hosts
+      delegate_to: localhost
+      become: false
+      ansible.builtin.known_hosts:
+        name: "{{ inventory_hostname }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + inventory_hostname) }}"
+        path: "~/.ssh/known_hosts"
