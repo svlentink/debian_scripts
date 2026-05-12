@@ -91,14 +91,13 @@
       src: ./fs-root/default/
       dest: /
       rsync_opts: &rsync_opts
-        - "--compress"
+        - "--keep-dirlinks"
         - "--archive"
         #- "--ignore-existing" # this would block updating files to a newer version
-        - "--recursive"
-        - "--keep-dirlinks"
         #- "--links" # covered by archive
         #- "--perms" # covered by archive
         #- "--times" # covered by archive
+        #- "--recursive" # covered by archive
     register: sync_default
 
   - name: rsync machine files
