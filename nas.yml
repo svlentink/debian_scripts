@@ -85,18 +85,20 @@
       mode: '0440'
       validate: '/usr/sbin/visudo -cf %s'
 
-  - name: rsync default files
-    become: yes
+  - name: Safely rsync new files without overwriting
+    become: true
     ansible.posix.synchronize:
       src: ./fs-root/default/
       dest: /
-      recursive: yes
-      mode: push # 0644
-      archive: yes
-      compress: yes
-      #rsync_path: "sudo rsync"
-      #owner
-      #group
+      rsync_opts: &rsync_opts
+        - "--compress"
+        - "--archive"
+        #- "--ignore-existing" # this would block updating files to a newer version
+        - "--recursive"
+        - "--keep-dirlinks"
+        #- "--links" # covered by archive
+        #- "--perms" # covered by archive
+        #- "--times" # covered by archive
     register: sync_default
 
   - name: rsync machine files
@@ -104,10 +106,7 @@
     ansible.posix.synchronize:
       src: "./fs-root/{{inventory_hostname}}/"
       dest: /
-      recursive: yes
-      mode: push # 0644
-      archive: yes
-      compress: yes
+      rsync_opts: *rsync_opts
     register: sync_host
 
   - name: Set prereq.
