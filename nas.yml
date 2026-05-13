@@ -57,13 +57,17 @@
         - autossh
         - curl
         - dnsutils
+        - exfatprogs
         - git
         - libnss-mdns
         - nftables # to block ssh on ipv6
+        #- ntfs-3g
         - nmap
         - python3-flask
         - python3-pip
         - rsync
+        - samba
+        - smbclient # smbclient -L localhost -N
         - tmux
         - tree
         - unzip
