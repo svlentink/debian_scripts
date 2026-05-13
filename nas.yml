@@ -6,7 +6,6 @@
   become: yes
 
   vars:
-    #timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
     reverse_proxy_user: sshtunnel
     ansible_user_name: ansible
     timezone: Europe/Amsterdam

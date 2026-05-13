@@ -1,0 +1,144 @@
+# ansible-playbook -i inventory.yml playbook.yml
+
+---
+- name: Synchronize files to fs
+  hosts: reverse_proxy
+  become: yes
+
+  vars:
+    reverse_proxy_user: sshtunnel
+    ansible_user_name: ansible
+    timezone: Europe/Amsterdam
+
+  tasks:
+
+  - name: Install prereq.
+    block:
+    - name: apt upgrade
+      ignore_errors: true
+      ansible.builtin.apt:
+        upgrade: dist #yes
+        update_cache: yes
+
+    - name: apt packages
+      ansible.builtin.apt:
+        update_cache: no
+        state: present
+        autoremove: true
+        autoclean: false
+        name:
+        - apt-transport-https
+        - curl
+        - dnsutils
+        - git
+        #- nftables # to block ssh on ipv6
+        - python3-pip
+        - rsync
+        - tmux
+        - tree
+        - unzip
+        - vim
+
+    - name: pip packages
+      ansible.builtin.pip:
+        break_system_packages: true
+        name:
+        - pyyaml
+
+  - name: rsync machine files
+    become: yes
+    ansible.posix.synchronize:
+      src: "./fs-root/{{inventory_hostname}}/"
+      dest: /
+      rsync_opts: *rsync_opts
+    register: sync_host
+
+  - name: Set prereq.
+    become: true
+    block:
+    - name: Set timezone using timedatectl
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    rescue:
+    - name: Link /etc/localtime to the correct zoneinfo
+      ansible.builtin.file:
+        src: "/usr/share/zoneinfo/{{ timezone }}"
+        dest: /etc/localtime
+        state: link
+        force: yes
+
+    - name: Write timezone to /etc/timezone
+      ansible.builtin.copy:
+        content: "{{ timezone }}\n"
+        dest: /etc/timezone
+        mode: '0644'
+
+  - name: Set prereq.
+    block:
+    - name: Ensure Canadian English locale exists because they use ISO datetime
+      ansible.builtin.locale_gen:
+        name: en_CA.UTF-8
+        state: present
+
+    - name: Set system locale to en_CA.UTF-8
+      ansible.builtin.lineinfile:
+        path: /etc/default/locale
+        line: 'LANG=en_CA.UTF-8'
+        create: yes
+
+    - name: Set hostname
+      block:
+      - name: Set hostname
+        ansible.builtin.hostname:
+          name: "{{ inventory_hostname_short }}"
+      rescue:
+      - name: fallback
+        become: true
+        ansible.builtin.copy:
+          dest: /etc/hostname
+          content: "{{ inventory_hostname_short }}"
+
+  - name: Setup SSH reverse tunnel
+    block:
+    - name: Create reverse proxy user
+      ansible.builtin.user:
+        name: "{{reverse_proxy_user}}"
+        system: yes
+        create_home: yes
+        home: "/home/{{reverse_proxy_user}}"
+        shell: /usr/sbin/nologin
+
+    - name: Fix SSH directory permissions
+      ansible.builtin.file:
+        path: "/home/{{reverse_proxy_user}}/.ssh"
+        state: directory
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
+        mode: '0700'
+
+    - name: Generate SSH key for reverse tunnel
+      ansible.builtin.openssh_keypair:
+        path: "/home/{{reverse_proxy_user}}/.ssh/id_rsa"
+        type: rsa # ed25519
+        size: 4096
+        owner: "{{reverse_proxy_user}}"
+        group: "{{reverse_proxy_user}}"
+        mode: '0600'
+
+  - name: secure ssh
+    when: false
+    block:
+    - name: Add public key to authorized_keys (remote host)
+      ansible.builtin.authorized_key:
+        user: "{{ ansible_user_name }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    # --- Controller-side task (known_hosts) ---
+    - name: Add remote host key to controller known_hosts
+      delegate_to: localhost
+      become: false
+      ansible.builtin.known_hosts:
+        name: "{{ inventory_hostname }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -H ' + inventory_hostname) }}"
+        path: "~/.ssh/known_hosts"
