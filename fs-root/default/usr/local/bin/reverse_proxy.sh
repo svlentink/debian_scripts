@@ -13,13 +13,13 @@ TUNNEL_PORT=8080 # this should be different for each device on your network
 AUTOSSH_GATETIME=0
 TUNNEL_USER=sshtunnel
 #exec /usr/bin/ssh \
-exec autossh -M 0 \
+exec runuser -u sshtunnel -- autossh -M 0 \
     -o "ServerAliveInterval 30" \
     -o "ServerAliveCountMax 3" \
     -o ExitOnForwardFailure=yes \
     -o StrictHostKeyChecking=accept-new \
-    -p 22
+    -p 22 \
     -R $TUNNEL_PORT:localhost:22 \
     -N \
-    -i $HOME/.ssh/id_rsa \
+    -i /home/$TUNNEL_USER/.ssh/id_rsa \
     $TUNNEL_USER@$TUNNEL_ADDRESS

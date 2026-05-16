@@ -5,25 +5,25 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=youruser
-Group=youruser
+#User=youruser
+#Group=youruser
 
 # check if user is able to execute file
-ExecStartPre=/usr/bin/test -x /usr/local/bin/reverse_proxy.sh
+#ExecStartPre=/usr/bin/test -x /usr/local/bin/reverse_proxy.sh
 ExecStart=/usr/local/bin/reverse_proxy.sh
 
 Restart=always
 RestartSec=300
-StartLimitIntervalSec=0
+#StartLimitIntervalSec=0
 
 TimeoutStartSec=0
 # kill off dormant SSH process
 KillMode=process
 
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=full
-ProtectHome=true
+#NoNewPrivileges=true
+#PrivateTmp=true
+#ProtectSystem=full
+#ProtectHome=true
 
 StandardOutput=journal
 StandardError=journal

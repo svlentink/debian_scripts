@@ -1,5 +1,10 @@
 # ansible-playbook -i inventory.yml playbook.yml
 
+# chmod 700 /home/armbian/.ssh
+# chmod 600 /home/armbian/.ssh/authorized_keys
+# chown -R armbian:armbian /home/armbian/.ssh
+
+
 ---
 - name: Synchronize files to fs
   hosts: nas
