@@ -163,13 +163,27 @@
         create: yes
 
     - name: Set hostname
-      ansible.builtin.hostname:
-        name: "{{ inventory_hostname_short }}"
+      block:
+      - name: Set hostname
+        ansible.builtin.hostname:
+          name: "{{ inventory_hostname_short }}"
+      rescue:
+      - name: fallback
+        become: true
+        ansible.builtin.copy:
+          dest: /etc/hostname
+          content: "{{ inventory_hostname_short }}"
 
     - name: Set port for reverse proxy
       ansible.builtin.lineinfile:
         path: /host.env
         line: "TUNNEL_PORT={{ tunnel_port }}"
+        create: yes
+
+    - name: Set local lan prefix
+      ansible.builtin.lineinfile:
+        path: /host.env
+        line: "LOCALNET_PREFIX={{ localnet_prefix }}"
         create: yes
 
   - name: Setup SSH reverse tunnel
