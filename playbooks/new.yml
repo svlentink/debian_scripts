@@ -19,4 +19,6 @@
   #- include_tasks: tasks/secure_ssh.yml
   - include_tasks: tasks/reverse_proxy.yml
 
+  - include_tasks: tasks/gpio.yml
+  - include_tasks: tasks/nas.yml
 
