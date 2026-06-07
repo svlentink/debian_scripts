@@ -1,0 +1,28 @@
+
+- name: Setup SSH reverse tunnel
+  block:
+  - name: Create reverse proxy user
+    ansible.builtin.user:
+      name: "{{reverse_proxy_user}}"
+      system: yes
+      create_home: yes
+      home: "/home/{{reverse_proxy_user}}"
+      shell: /usr/sbin/nologin
+
+  - name: Fix SSH directory permissions
+    ansible.builtin.file:
+      path: "/home/{{reverse_proxy_user}}/.ssh"
+      state: directory
+      owner: "{{reverse_proxy_user}}"
+      group: "{{reverse_proxy_user}}"
+      mode: '0700'
+
+  - name: Generate SSH key for reverse tunnel
+    ansible.builtin.openssh_keypair:
+      path: "/home/{{reverse_proxy_user}}/.ssh/id_rsa"
+      type: rsa # ed25519
+      size: 4096
+      owner: "{{reverse_proxy_user}}"
+      group: "{{reverse_proxy_user}}"
+      mode: '0600'
+

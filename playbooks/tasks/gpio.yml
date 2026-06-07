@@ -1,0 +1,33 @@
+
+
+- name: apt packages
+  ansible.builtin.apt:
+    update_cache: no
+    state: present
+    autoremove: true
+    autoclean: false
+    name:
+    - build-essential # needed for gpiod
+    - device-tree-compiler # needed for Radxa OS for custom pin selection
+    - i2c-tools
+    #- podman
+    - python3-dev # needed for gpiod
+    - python3-flask
+    - python3-pip
+    #- bridge-utils # not needed, we use systemd-networkd
+    #- python3-smbus # FIXME this should be python3-smbus2, but Radxa OS uses an old debian
+
+- name: pip packages
+  ansible.builtin.pip:
+    break_system_packages: true
+    name:
+    #- i2cdev
+    - gpiod # gpioinfo on shell
+    #- OPi.GPIO
+    #- rpi.gpio
+    #- gpiozero
+    #- pigpio 
+    - pyyaml
+    - smbus2
+
+

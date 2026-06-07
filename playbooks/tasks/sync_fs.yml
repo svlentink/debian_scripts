@@ -1,0 +1,35 @@
+
+- name: Allow user to run rsync as root without password
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/rsync_root
+    line: "{{ansible_user}} ALL=(root) NOPASSWD: /usr/bin/rsync"
+    state: present
+    create: yes
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Safely rsync new files without overwriting
+  become: true
+  ansible.posix.synchronize:
+    src: ./fs-root/default/
+    dest: /
+    rsync_opts: &rsync_opts
+      - "--keep-dirlinks"
+      - "--archive"
+      #- "--ignore-existing" # this would block updating files to a newer version
+      #- "--links" # covered by archive
+      #- "--perms" # covered by archive
+      #- "--times" # covered by archive
+      #- "--recursive" # covered by archive
+  register: sync_default
+
+# FIXME loop over [default, inventory_hostname]
+- name: rsync machine files
+  become: yes
+  ansible.posix.synchronize:
+    src: "./fs-root/{{inventory_hostname}}/"
+    dest: /
+    rsync_opts: *rsync_opts
+  register: sync_host
+

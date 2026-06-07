@@ -1,0 +1,95 @@
+
+- name: Run systemd-networkd
+  when: sync_default.changed or sync_host.changed
+  block:
+  - name: Enable and start systemd networking services (it is normal to be kicked out and a new IP when switched to br0)
+    ansible.builtin.systemd_service:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    loop:
+      - systemd-networkd
+      - systemd-resolved
+
+  - name: Configure nsswitch hosts line for mDNS + resolved
+    ansible.builtin.lineinfile:
+      path: /etc/nsswitch.conf
+      regexp: '^hosts:'
+      line: 'hosts: files mymachines mdns_minimal [NOTFOUND=return] resolve dns myhostname'
+      backup: yes
+
+  - name: Create directory for custom MAC address
+    ansible.builtin.file:
+      path: /etc/systemd/network/br0.network.d
+      state: directory
+      mode: '0755'
+
+  # We set a specific MAC since this will lead to a predictable IPv6 link local address
+  # besides that, we observed when buying multiple Radxa boards that we had duplicate MACs
+  - name: set MACAddress
+    ansible.builtin.blockinfile:
+      path: /etc/systemd/network/br0.network.d/mac.conf
+      create: yes
+      block: |
+        [Link]
+        MACAddress={{mac_address}}
+
+  - name: Reload systemd if files were synchronized
+    ansible.builtin.systemd_service:
+      daemon_reload: yes
+  #- name: Reload systemd daemon
+  #  command: systemctl daemon-reload
+
+  - name: Enable and start timers
+    ansible.builtin.systemd_service:
+      name: "{{ item | basename }}"
+      enabled: yes
+      state: started
+    loop: "{{ timers }}"
+    when: false # we use symlinks instead and sync them
+    #when: timers | length > 0
+
+  - name: disable avahi in favor of mdns through systemd networking
+    ignore_errors: yes
+    ansible.builtin.systemd_service:
+      name: avahi-daemon
+      enabled: no
+      state: stopped
+      masked: yes
+
+  - name: disable bluetooth
+    ignore_errors: yes
+    ansible.builtin.systemd_service:
+      name: bluetooth
+      enabled: no
+      state: stopped
+      masked: yes
+
+  - name: disable wifi
+    ignore_errors: yes
+    ansible.builtin.systemd_service:
+      name: wpa_supplicant
+      enabled: no
+      state: stopped
+      masked: yes
+
+  - name: disable NetworkManager (on Radxa OS) in favor of systemd networking
+    ignore_errors: true # in case not present (Armbian)
+    ansible.builtin.systemd_service: 
+      name: NetworkManager
+      enabled: no
+      state: stopped
+      masked: yes
+
+  - name: loose the confusion
+    ansible.builtin.apt:
+      state: absent
+      autoremove: true
+      name:
+      - ifupdown
+      - nano
+      - netplan.io
+      - network-manager
+      - bridge-utils
+      - avahi-utils
+      - wpa_supplicant

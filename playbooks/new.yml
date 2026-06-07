@@ -1,0 +1,22 @@
+# apt install -y rsync
+# ssh-copy-id radxa@192.168.1.173
+# ansible-playbook -i inventory.yml playbook.yml
+# ansible-playbook -i ../ansible/inventory.yml playbook.yml -e "ansible_user=radxa"   -e "ansible_ssh_private_key_file=~/.ssh/id_rsa"   --connection=ssh
+
+---
+- name: Synchronize files to fs
+  hosts: radxa
+  become: yes
+
+  vars:
+    timezone: Europe/Lisbon
+
+  tasks:
+  - include_tasks: tasks/general_facts.yml
+  - include_tasks: tasks/update.yml
+  - include_tasks: tasks/sync_fs.yml
+  - include_tasks: tasks/systemd_networkd.yml
+  #- include_tasks: tasks/secure_ssh.yml
+  - include_tasks: tasks/reverse_proxy.yml
+
+

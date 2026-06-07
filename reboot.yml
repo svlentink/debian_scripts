@@ -1,0 +1,10 @@
+- name: Check reboot required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_md5: no
+  register: reboot_required
+
+- name: reboot when needed
+  when: reboot_required.stat.exists == true
+  ansible.builtin.reboot: {}
+

@@ -1,0 +1,74 @@
+
+- name: construct MAC address and derive what local link address will be after reboot
+  ansible.builtin.set_fact:
+    #timers: "{{ lookup('fileglob', './fs-root/etc/systemd/system/*.timer', wantlist=True) }}"
+    reverse_proxy_user: sshtunnel
+    ansible_user_name: ansible
+    mac_address: "02:00:00:{{ location_double_digit }}:00:{{ device_id_double_digit }}"
+    # a quick remark on link-local and mdns
+    # link local is only for machine to machine and we use the mac address to get a predicatable link local address
+    # however, expect this to be blocked by the browser
+    # then you might think, the dhcp assigned address can be used based on mdns name,
+    # but this only works if the user has no form of private DNS activated,
+    # therefor, you cannot rely on any of these two.
+    ipv6_link_local: "fe80::ff:fe{{ location_double_digit }}:{{ device_id_double_digit }}" # ansible_host
+    tunnel_port: "{{ location_double_digit }}{{ device_id_double_digit }}"
+
+- name: Set timezone
+  become: true
+  block:
+  - name: Set timezone using timedatectl
+    community.general.timezone:
+      name: "{{ timezone }}"
+
+  rescue:
+  - name: Link /etc/localtime to the correct zoneinfo
+    ansible.builtin.file:
+      src: "/usr/share/zoneinfo/{{ timezone }}"
+      dest: /etc/localtime
+      state: link
+      force: yes
+
+  - name: Write timezone to /etc/timezone
+    ansible.builtin.copy:
+      content: "{{ timezone }}\n"
+      dest: /etc/timezone
+      mode: '0644'
+
+- name: Set prereq.
+  block:
+  - name: Ensure Canadian English locale exists because they use ISO datetime
+    ansible.builtin.locale_gen:
+      name: en_CA.UTF-8
+      state: present
+
+  - name: Set system locale to en_CA.UTF-8
+    ansible.builtin.lineinfile:
+      path: /etc/default/locale
+      line: 'LANG=en_CA.UTF-8'
+      create: yes
+
+  - name: Set hostname
+    block:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname_short }}"
+    rescue:
+    - name: fallback
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/hostname
+        content: "{{ inventory_hostname_short }}"
+
+  - name: Set port for reverse proxy
+    ansible.builtin.lineinfile:
+      path: /host.env
+      line: "TUNNEL_PORT={{ tunnel_port }}"
+      create: yes
+
+  - name: Set local lan prefix
+    ansible.builtin.lineinfile:
+      path: /host.env
+      line: "LOCALNET_PREFIX={{ localnet_prefix }}"
+      create: yes
+

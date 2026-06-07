@@ -1,0 +1,43 @@
+
+- name: Install prereq.
+  block:
+  - name: Check if Armbian
+    ansible.builtin.command: which armbian-upgrade
+    register: is_armbian
+    failed_when: false
+    changed_when: false
+
+  - name: Run armbian-upgrade
+    ignore_errors: true
+    ansible.builtin.command: armbian-upgrade -y
+    when: is_armbian.rc == 0
+
+  - name: apt upgrade
+    ignore_errors: true
+    ansible.builtin.apt:
+      upgrade: dist #yes
+      update_cache: yes
+
+  - name: apt packages
+    ansible.builtin.apt:
+      update_cache: no
+      state: present
+      autoremove: true
+      autoclean: false
+      name:
+      - apt-transport-https
+      - arp-scan
+      - arping # layer 2 ping
+      - autossh
+      - curl
+      - dnsutils
+      - git
+      - libnss-mdns
+      - nftables # to block ssh on ipv6
+      - nmap
+      - rsync
+      - tmux
+      - tree
+      - unzip
+      - vim
+

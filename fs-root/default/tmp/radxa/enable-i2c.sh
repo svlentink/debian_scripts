@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in /home/radxa/*.dts; do
+for i in /tmp/*.dts; do
     dtc \
         -@ \
         -I dts \

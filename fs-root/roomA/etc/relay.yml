@@ -29,19 +29,19 @@ i2c:
         name: mosquito
         COM: L1
         'NO': mosquito_socket
-        auto_off_sec: 3600
+        auto_off_sec: &4h 14400
         location: ac
       - label: A5
         name: projector
         COM: L1
         'NO': projector
-        auto_off_sec: 14400 # 4h
+        auto_off_sec: *4h
       - label: A6
         name: AC or heater
         COM: L1_AC
         'NO': heater_under_desk
         NC: AC
-        auto_off_sec: 14400
+        auto_off_sec: *4h
         location: ac
       - label: A7
         name: signal_AC

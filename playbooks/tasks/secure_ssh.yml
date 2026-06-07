@@ -1,0 +1,55 @@
+
+
+- name: secure ssh
+  when: false
+  block:
+  - name: Create ansible user
+    ansible.builtin.user:
+      name: "{{ ansible_user_name }}"
+      shell: /bin/bash
+      groups: sudo
+      append: yes
+      create_home: yes
+
+  - name: Create .ssh directory
+    ansible.builtin.file:
+      path: "/home/{{ ansible_user_name }}/.ssh"
+      state: directory
+      owner: "{{ ansible_user_name }}"
+      group: "{{ ansible_user_name }}"
+      mode: '0700'
+
+  - name: Add public key to authorized_keys (remote host)
+    ansible.builtin.authorized_key:
+      user: "{{ ansible_user_name }}"
+      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  - name: Disable SSH password authentication
+    when: false # we copy the config instead
+    ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^#?PasswordAuthentication'
+      line: 'PasswordAuthentication no'
+      validate: 'sshd -t -f %s'
+
+  - name: Ensure PubkeyAuthentication is enabled
+    when: false # we copy the config
+    ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^#?PubkeyAuthentication'
+      line: 'PubkeyAuthentication yes'
+      validate: 'sshd -t -f %s'
+
+  - name: Restart SSH service
+    ansible.builtin.service:
+      name: ssh
+      state: restarted
+
+  # --- Controller-side task (known_hosts) ---
+  - name: Add remote host key to controller known_hosts
+    delegate_to: localhost
+    become: false
+    ansible.builtin.known_hosts:
+      name: "{{ inventory_hostname }}"
+      key: "{{ lookup('pipe', 'ssh-keyscan -H ' + inventory_hostname) }}"
+      path: "~/.ssh/known_hosts"
