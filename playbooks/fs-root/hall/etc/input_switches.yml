@@ -1,0 +1,24 @@
+gpio:
+  7:
+    name: front_door
+    is_NC: 1 
+    actions:
+      engaged:
+      - localhost/hall_light/300
+  10:
+    name: kitchen_door
+    is_NC: 1 
+    actions:
+      disengaged:
+      - localhost/hall_light/300
+      - localhost/kitchen_light/600
+  8:
+    name: hot_water
+    desc: There is a temperature switch on the waterpipe to the bathrooms that switches on 35C
+    is_NC: 1
+
+  8:
+    name: building_door_bell
+    is_NC: 1
+
+
