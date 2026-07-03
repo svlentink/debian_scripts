@@ -37,15 +37,17 @@ i2c:
         'NO': projector
         auto_off_sec: *4h
       - label: A6
-        name: AC or heater
-        COM: L1_AC
+        name: desk_heater
+        COM: L1_AC_outdoor_unit
         'NO': heater_under_desk
-        NC: AC
+        NC: AC_indoor
         auto_off_sec: *4h
         location: ac
       - label: A7
-        name: signal_AC
-        COM: AC_signal
-        'NO': COMM_condenstation_pump
+        name: AC
+        COM: doorcard
+        'NO': doorcard
         location: ac
+        auto_off_sec: *4h
+
 
