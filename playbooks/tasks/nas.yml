@@ -7,7 +7,12 @@
     autoclean: false
     name:
     - exfatprogs
+    - exfat-fuse
     #- ntfs-3g
     - rsync
     - samba
     - smbclient # smbclient -L localhost -N
+    - traceroute # debug ipv6 issues with traceroute6
+
+- name: modprobe
+  ansible.builtin.command: modprobe exfat
