@@ -9,7 +9,7 @@ class Relay:
     def __init__(self, addr, metadata, is_powered: bool = False):
         self.addr = addr
         self.data = metadata
-        self.is_powered = is_powered
+        self._is_powered = is_powered
         self.timer = None
         self.__gpio_line = None
 
@@ -17,8 +17,17 @@ class Relay:
             #GPIO.setmode(GPIO.BOARD)
             #GPIO.setup(addr['pin'], GPIO.OUT, initial=(not engaged))
             self.__gpio_line = GPIOchip.get_line(addr['pin'])
-            # FIXME what does consumer do?
-            self.__gpio_line.request(consumer="LED", type=line_request.DIRECTION_OUTPUT)
+            self.__gpio_line.request(consumer=self.data['label'], type=line_request.DIRECTION_OUTPUT)
+
+    @property
+    def is_powered(self):
+        return self._is_powered
+
+    @is_powered.setter
+    def is_powered(self, new_value):
+        self._is_powered = new_value
+        if not new_value: # if state of relay is set to False
+            self.timer = None
 
     def get_state(self):
         return (self.addr, self.data, self.is_powered)
@@ -38,8 +47,9 @@ class Relay:
         else:
             return False
 
-    def set_gpio(val):
-        return self.__gpio_line.set_value(val)
+    def set_gpio(self, val):
+        self.is_powered = val
+        return self.__gpio_line.set_value(not val)
 
     def get_addr(self):
         typ = self.addr['type'].upper()

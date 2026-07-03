@@ -96,14 +96,14 @@ class RelayBoard:
         relay.timer = TrackableTimer(auto_off, self.__set, [relay, False])
 
     def __set(self, relay: Relay, is_powered: bool):
-        relay.is_powered = is_powered
         relay_addr = relay.get_addr()
         relay_type = relay_addr[0]
         if relay_type == "GPIO":
             #pin = relay.get_addr()[1]
             #GPIO.output(pin, not relay.is_powered)
-            relay.set_gpio(not relay.is_powered)
+            relay.set_gpio(relay.is_powered)
         if relay_type == "I2C":
+            relay.is_powered = is_powered
             neighbors = [ n for n in self.relays if n.close_neighbor(relay) ]
             data_val = 255 #int('0xff',16)
             neighbors.append(relay)
@@ -119,6 +119,7 @@ class RelayBoard:
             if type(data_addr) == str:
                 data_addr = int(data_addr,16)
             bus = smbus2.SMBus(bus_addr)
+            print(f"executing: i2cset {bus_addr} {chip_addr} {data_addr} {data_val}")
             bus.write_byte_data(chip_addr, data_addr, data_val)
         
         if is_powered:
