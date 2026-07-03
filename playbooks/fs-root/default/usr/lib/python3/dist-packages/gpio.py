@@ -27,7 +27,7 @@ def load_gpio():
 #        import gpiod as GPIO
 #        #raise RuntimeError(f"Unknown board: {model}")
     
-    return Chip(model)
+    return Chip(f"/dev/{model}")
 
 
 GPIOchip = load_gpio()
