@@ -17,7 +17,7 @@ class TrackableTimer:
 
     @property
     def remaining(self):
-        if ! self.timer.is_alive():
+        if not self.timer.is_alive():
             return 0
         # If remaining is negative, the timer has already fired/expired
         return max(0, self.interval - (time.monotonic() - self.start_time))

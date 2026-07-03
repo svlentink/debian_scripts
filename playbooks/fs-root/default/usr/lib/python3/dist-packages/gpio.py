@@ -10,11 +10,11 @@ from  gpiod import Chip
 
 def load_gpio():
     model = "gpiochip0"
-    try:
-        with open("/proc/device-tree/model") as f:
-            model = f.read().lower()
-    except:
-        pass
+    #try:
+    #    with open("/proc/device-tree/model") as f:
+    #        model = f.read().lower()
+    #except:
+    #    pass
 
 # RPi.GPIO / OPi.GPIO: Use pin-numbering schemes (BOARD or BCM) and treat pins as global, individual entities.
 # gpiod: Organizes pins by chips (e.g., gpiochip0) and lines (the hardware offset on that chip).
@@ -26,7 +26,6 @@ def load_gpio():
 #    else:
 #        import gpiod as GPIO
 #        #raise RuntimeError(f"Unknown board: {model}")
-
     
     return Chip(model)
 
