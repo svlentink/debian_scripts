@@ -61,7 +61,8 @@ class Relay:
 
     def timer_remaining_str(self):
         if self.is_scheduled_to_go_off():
-            return f"seconds until turning off: {self.timer.remaining}"
+            return f"seconds until turning off: {int(self.timer.remaining)}"
+        return ""
 
 
     def html(self):
