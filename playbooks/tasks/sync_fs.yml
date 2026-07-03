@@ -41,4 +41,5 @@
     dest: /
     rsync_opts: *rsync_opts
   register: sync_host
+  ignore_errors: true # if folder does not exist
 
