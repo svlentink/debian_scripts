@@ -5,7 +5,8 @@ import smbus2
 import yaml
 from pathlib import Path
 from trackabletimer import TrackableTimer
-from single_relay import Relay 
+from single_relay import Relay
+import socket
 
 class RelayBoard:
     def __init__(self, conf_path: str = "/etc/relay.yml", state_path: str = "/run/relay.yml"):
@@ -53,7 +54,7 @@ class RelayBoard:
     def __repr__(self):
         return str(self)
     def __str__(self):
-        result = ''
+        result = socket.getfqdn() + "\n"
         for i, relay in enumerate(self.relays):
             result += str(i) + str(relay)
         return result
@@ -64,7 +65,8 @@ class RelayBoard:
             if loc not in result:
                 result[loc] = f"<hr/>{loc}<br/>"
             result[loc] += r.html()
-        return "<br/>".join(result.values())
+        return f"<h3>{socket.getfqdn()}</h3>" \
+                + "<br/>".join(result.values())
 
     def get(self, name: str):
         if name.isdigit():
