@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# an alternative to https://www.home-assistant.io/integrations/binary_sensor/
+# https://community.home-assistant.io/t/esp-home-simple-switch-button-wiring-and-code/859673/6
+# https://community.home-assistant.io/t/pysical-pushbutton-on-gpio-to-shut-down-home-assistant/570622/4
+
 import time
 from gpio import GPIOchip
 from gpiod import LINE_REQ_EV_BOTH_EDGES
@@ -11,6 +15,7 @@ import yaml
 from pathlib import Path
 import gpiod
 import requests
+from dataclasses import dataclass
 
 #If you're building a service that reacts to GPIO events, look for:
 
@@ -46,28 +51,17 @@ with gpiod.request_lines(
                 )
 
 
-# Define the chip path and the list of pin offsets you want to read
 CHIP_PATH = "/dev/gpiochip4"  # Change to your chip (e.g., /dev/gpiochip0)
-BUTTON_PINS = [5, 6, 13]      # The GPIO line numbers
 
-# Configure settings universally for all target lines
-DEFAULT_LINE_CONFIG = gpiod.LineSettings(
-    direction=Direction.INPUT,
-    edge_detection=Edge.BOTH,                   # both press and release
-    bias=Bias.PULL_UP,                          # button pin connected to GND
-    debounce_period=timedelta(milliseconds=100) # Filter out button rattle
-)
 
-# Bundle the pins into a configuration mapping
-# Passing a tuple/list of pins as a key applies the settings to all of them
-config_map = {
-    tuple(BUTTON_PINS): line_cfg
-}
 
 class InputWatcher:
     def __init__(self, conf_path: str = '/etc/binary_sensors.yml', line_cfg = DEFAULT_LINE_CONFIG):
-        self._sensors = self.load_conf
- 
+        self._line_cfg = line_cfg
+        with open(conf_path, 'r') as fp:
+            raw_config = yaml.safe_load(fp)
+        self._sensors = self.__parse_conf(raw_config)
+    
 
     def _on_event(self, pin: int, is_high: bool, read_on_init_instead_of_triggered: bool = False, bias = Bias.PULL_UP):
         if bias == Bias.PULL_UP: # button connected to ground
@@ -76,6 +70,10 @@ class InputWatcher:
             is_engaged = not is_high
         else: # bias == Bias.PULL_DOWN
             is_engaged = is_high
+
+        self._run_actions(pin, is_engaged)
+
+    def _run_actions(self, pin, is_engaged: bool):
 
 
     def _run_blocking(self):
@@ -91,48 +89,58 @@ class InputWatcher:
                     pin = event.line_offset
                     is_high = event.event_type == event.Type.RISING_EDGE # or FALLING_EDGE
                     self._on_event(pin, is_high)
+
+        
+    def __parse_conf(self, conf):
+        if not 'gpio' in conf:
+            raise Exception("config is missing gpio section")
+
+        pins = conf['gpio']
+
+        # Bundle the pins into a configuration mapping
+        # Passing a tuple/list of pins as a key applies the settings to all of them
+        self._listener_instructions = {
+            tuple(pins.keys()): self._line_cfg
+        }
+
+        result = []
+        for pin, sensor_data in pins.items():
+            relay = Relay(pin, sensor_data)
+            result.append(relay)
+
+        return result
+
+# Configure settings universally for all target lines
+DEFAULT_LINE_CONFIG = gpiod.LineSettings(
+    direction=Direction.INPUT,
+    edge_detection=Edge.BOTH,                   # both press and release
+    bias=Bias.PULL_UP,                          # button pin connected to GND
+    debounce_period=timedelta(milliseconds=100) # Filter out button rattle
+)
+
+@dataclass
+class BinarySensor:
+    pin: int
+    line_cfg: gpiod.LineSettings = DEFAULT_LINE_CONFIG
+    is_engaged: bool = False
+
+    def __str__(self):
+        result = ''
+        if bias == Bias.PULL_UP:
+            prefix = ' GND'
+        else:
+            prefix = '3.3V'
+
+        if self.is_engaged:
+            result += '''
+{prefix}---o__|__o---{self.pin} {}
+'''
+        else:
+            result += '''
+{prefix}---o  |  o---{self.pin} {}
+         --'--
+'''
         
 
-class RelayBoard:
-    def __init__(self, conf_path: str = "/etc/input_switches.yml", state_path: str = "/run/relay.yml"):
-        self.state_path = state_path
-        if Path(self.state_path).is_file() and False: # disabled because since we introduced Timer, this cannot be written to disk
-            with open(self.state_path, 'r') as fp:
-                self.relays = [Relay(*i) for i in yaml.safe_load(fp)]
-        else: # we only reload the config after a reboot when state_path stored in /run
-            with open(conf_path, 'r') as fp:
-                raw_config = yaml.safe_load(fp)
-            self.relays = self.__parse_conf(raw_config)
-    
-    def save_state(self):
-        states = [list(r.get_state()) for r in self.relays]
-        with open(self.state_path, 'w') as fp:
-            yaml.dump(states, fp, default_flow_style=False)
 
-    def __parse_conf(self, conf):
-        result = []
-        if 'gpio' in conf:
-            for pin, relay_data in conf['gpio'].items():
-                addr = {
-                    'type': 'GPIO',
-                    'pin': pin,
-                }
-                relay = Relay(addr, relay_data)
-                result.append(relay)
-
-        if 'i2c' in conf:
-            for i2cbus, bus in conf['i2c'].items():
-                for chip_addr, chip in bus.items():
-                    for data_addr, data_list, in chip.items():
-                        for relay_id, relay_data in enumerate(data_list):
-                            addr = {
-                                'type': 'I2C',
-                                'bus': i2cbus,
-                                'chip': chip_addr,
-                                'data': data_addr,
-                                'id': relay_id,
-                            }
-                            relay = Relay(addr, relay_data)
-                            result.append(relay)
-        return result
 

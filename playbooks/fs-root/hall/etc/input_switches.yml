@@ -17,7 +17,7 @@ gpio:
     desc: There is a temperature switch on the waterpipe to the bathrooms that switches on 35C
     is_NC: 1
 
-  8:
+  99:
     name: building_door_bell
     is_NC: 1
 
