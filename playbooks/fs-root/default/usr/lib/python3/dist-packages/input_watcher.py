@@ -8,12 +8,11 @@ import time
 from gpio import GPIOchip
 from gpiod import LINE_REQ_EV_BOTH_EDGES
 from gpiod.line import Direction, Value
-import gpiod
 from gpiod.line import Direction, Edge, Bias
+import gpiod
 from datetime import timedelta
 import yaml
 from pathlib import Path
-import gpiod
 import requests
 from dataclasses import dataclass
 
@@ -21,19 +20,6 @@ from dataclasses import dataclass
 
 #Edge-triggered callbacks (when_pressed, add_event_detect, etc.)
 #Async support with asyncio
-
-CHIP = "/dev/gpiochip0"
-LINE = 17
-
-with gpiod.request_lines(
-    CHIP,
-    consumer="gpio-monitor",
-    config={
-        LINE: gpiod.LineSettings(
-            edge_detection=gpiod.line.Edge.BOTH
-        )
-    },
-) as req:
 
     while True:
         time.sleep(0.3)
@@ -51,13 +37,10 @@ with gpiod.request_lines(
                 )
 
 
-CHIP_PATH = "/dev/gpiochip4"  # Change to your chip (e.g., /dev/gpiochip0)
-
-
-
 class InputWatcher:
-    def __init__(self, conf_path: str = '/etc/binary_sensors.yml', line_cfg = DEFAULT_LINE_CONFIG):
+    def __init__(self, conf_path: str = '/etc/binary_sensors.yml', line_cfg = DEFAULT_LINE_CONFIG, chip='/dev/gpiochip0'):
         self._line_cfg = line_cfg
+        self._chip = chip
         with open(conf_path, 'r') as fp:
             raw_config = yaml.safe_load(fp)
         self._sensors = self.__parse_conf(raw_config)
@@ -77,7 +60,7 @@ class InputWatcher:
 
 
     def _run_blocking(self):
-        with gpiod.request_lines(CHIP_PATH, consumer="button-monitor", config=config_map) as request:
+        with gpiod.request_lines(self._chip, consumer="button-monitor", config=config_map) as request:
             binary_sensor_states = request.get_values()
             for i, pin in enumerate(gpio_pins):
                 is_high = binary_sensor_states[i] == Value.ACTIVE # or Value.INACTIVE
@@ -122,7 +105,18 @@ DEFAULT_LINE_CONFIG = gpiod.LineSettings(
 class BinarySensor:
     pin: int
     line_cfg: gpiod.LineSettings = DEFAULT_LINE_CONFIG
-    is_engaged: bool = False
+    __is_engaged: bool = False
+
+    @property
+    def is_engaged(self)
+        return self.__is_engaged
+
+    @is_engaged.setter
+    def is_engaged(self, state: bool):
+        if state == self.__is_engaged:
+            return
+        self.__is_engaged = state
+        self.run_actions()
 
     def __str__(self):
         result = ''
@@ -140,7 +134,9 @@ class BinarySensor:
 {prefix}---o  |  o---{self.pin} {}
          --'--
 '''
-        
+
+    def run_actions():
+        return
 
 
 

@@ -1,0 +1,31 @@
+edition = "2026"; // protobuf.dev/editions/features/
+
+package com.example;
+
+option features.utf8_validation = NONE;
+option features.enforce_naming_style = STYLE2026;
+option features.default_symbol_visibility = EXPORT_ALL;
+
+// Sets the default behavior for C++ strings
+option features.(pb.cpp).string_type = STRING;
+
+message Player {
+  // fields have explicit presence, so no explicit setting needed
+  string name = 1 [default = "N/A"];
+  // to match the proto3 behavior, IMPLICIT is set at the field level
+  int32 id = 2 [features.field_presence = IMPLICIT];
+  // PACKED is the default state, and is provided just for illustration
+  repeated int32 scores = 3 [features.repeated_field_encoding = PACKED];
+
+  export enum Handed {
+    HANDED_UNSPECIFIED = 0;
+    HANDED_LEFT = 1;
+    HANDED_RIGHT = 2;
+    HANDED_AMBIDEXTROUS = 3;
+  }
+
+  Handed handed = 4;
+
+  reserved gender;
+}
+

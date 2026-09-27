@@ -22,3 +22,5 @@ gpio:
     is_NC: 1
 
 
+# The actions should be de-coupled
+# based on incoming msgs, actions should be done
