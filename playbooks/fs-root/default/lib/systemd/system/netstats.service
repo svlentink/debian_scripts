@@ -3,6 +3,7 @@
 Description=Get overview of local network
 Wants=network-online.target
 After=network-online.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=oneshot

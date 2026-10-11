@@ -1,0 +1,29 @@
+# this playbook should create a user,
+# which allows ssh to a read-only tmux session.
+# This allows a work laptop to be used as a screen
+# and phone + keyboard to be used as import
+
+# Idea came after seeing IsaiahPapa/terminal.shop and 
+
+no-port-forwarding,no-X11-forwarding,no-agent-forwarding
+
+make sure /usr/local/bin/tmux_viewer.sh
+is in
+/etc/shells
+
+add user
+usermod -s /usr/local/bin/tmux_viewer.sh myuser
+
+/etc/passwd
+myuser:x:1001:1001::/home/myuser:/usr/local/bin/tmux_viewer.sh
+
+instead of using a custom shell
+another approach could be to use:
+```
+Match User myuser
+  ForceCommand /usr/local/bin/tmux_viewer.sh
+  ForceCommand internal-sftp
+  ChrootDirectory /somedir
+```
+in /etc/ssh/sshd_config.d/tmux_viewer
+

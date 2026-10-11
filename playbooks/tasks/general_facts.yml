@@ -48,7 +48,14 @@
       line: 'LANG=en_CA.UTF-8'
       create: yes
 
+  - name: Check if kubectl exists
+    ansible.builtin.shell: command -v kubectl
+    register: kubectl_check
+    changed_when: false
+    failed_when: false
+
   - name: Set hostname
+    when: kubectl_check.rc != 0 # microk8s gets confused if the hostname changes
     block:
     - name: Set hostname
       ansible.builtin.hostname:

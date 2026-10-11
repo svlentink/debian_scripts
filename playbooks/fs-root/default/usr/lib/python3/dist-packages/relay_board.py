@@ -120,9 +120,9 @@ class RelayBoard:
                 chip_addr = int(chip_addr,16)
             if type(data_addr) == str:
                 data_addr = int(data_addr,16)
-            bus = smbus2.SMBus(bus_addr)
-            print(f"executing: i2cset {bus_addr} {chip_addr} {data_addr} {data_val}")
-            bus.write_byte_data(chip_addr, data_addr, data_val)
+            with smbus2.SMBus(bus_addr) as bus:
+                print(f"executing: i2cset {bus_addr} {chip_addr} {data_addr} {data_val}")
+                bus.write_byte_data(chip_addr, data_addr, data_val)
         
         if is_powered:
             self.schedule_off_if_needed(relay)

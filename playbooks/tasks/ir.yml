@@ -1,0 +1,42 @@
+# https://learn.adafruit.com/using-an-ir-remote-with-a-raspberry-pi-media-center/lirc
+# https://forums.raspberrypi.com/viewtopic.php?t=239350
+# http://alexba.in/blog/2013/01/06/setting-up-lirc-on-the-raspberrypi/
+# https://www.instructables.com/Raspberry-Pi-Zero-Universal-Remote/
+
+
+from pymodbus.client import ModbusSerialClient
+
+client = ModbusSerialClient(
+    port="/dev/ttyUSB0",
+    baudrate=9600,
+    bytesize=8,
+    parity="E",
+    stopbits=1,
+)
+
+client.connect()
+
+
+                 RS485 converter
+               ┌─────────────────┐
+OR-WE-523      │                 │       Raspberry Pi
+               │                 │
+23 A ──────────┤ A               │
+               │                 │
+24 B ──────────┤ B               │
+               │                 │
+               │ GND ────────────┼──── Pi GND
+               │                 │
+               │ RXD ────────────┼──── Pi TXD  (GPIO14, pin 8)
+               │                 │
+               │ TXD ────────────┼──── Pi RXD  (GPIO15, pin 10)
+               │                 │
+               │ VCC ────────────┼──── Pi 3.3V
+               │                 │
+               └─────────────────┘
+
+Pi ── short TTL ── RS485 converter ═══════════ A/B ═══════════ meter
+                                      5 m
+
+
+
