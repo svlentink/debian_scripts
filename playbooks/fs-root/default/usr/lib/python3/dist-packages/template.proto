@@ -1,5 +1,8 @@
 edition = "2026"; // protobuf.dev/editions/features/
 
+// https://gist.github.com/shankarshastri/c1b4d920188da78a0dbc9fc707e82996
+// https://protobuf.dev/programming-guides/proto3/
+
 package com.example;
 
 option features.utf8_validation = NONE;
